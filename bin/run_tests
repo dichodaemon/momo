@@ -1,0 +1,131 @@
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sys
+import os
+
+BASE_DIR = os.path.abspath( os.path.join( os.path.dirname( __file__ ), ".." ) )
+path     = os.path.abspath( os.path.join( BASE_DIR, "python" ) )
+sys.path.append( path )
+
+import prediction
+import prediction.astar
+import numpy as np
+import matplotlib.pylab as pl
+import scipy.ndimage as ni
+
+def read_data( filename ):
+  f = open( filename )
+  result = [[float( v ) for v in l.split()] for l in f]
+  f.close()
+  return result
+
+def compute_features( module, p1, p2 ):
+  if not prediction.synchronized( p1, p2 ):
+    raise "Arrays are not synchronized"
+
+  p2 = prediction.compute_angles( p2[:, :2] )
+
+  f = np.zeros( (p2.shape[0], module.feature_size ) )
+  for i in xrange( p2.shape[0] ):
+    f[i] = module.compute( p1[i], p2[i] )
+  return f
+
+def display_cost( module, cost_function, pixel_size = 100, image_size = 10 ):
+  cost_map = np.zeros( ( pixel_size, pixel_size ) )
+  delta = 1.0 * image_size / pixel_size
+  side = image_size / 2.0
+  update_grid( 
+    cost_map, cost_function, -side, side, delta, 
+    np.array([0., 0, 1, 0]) , cost_map 
+  )
+  pl.imshow( cost_map, pl.cm.jet, None, None, "none", extent = (-side, side, -side, side ) )
+  #pl.imshow( cost_map, pl.cm.jet, None, None, None, extent = (-side, side, -side, side ) )
+
+def update_grid( module, cost_function, grid_x, grid_y, delta, agent, grid ):
+  y = grid_y
+  for i in xrange( grid.shape[0] ):
+    x = grid_x
+    for j in xrange( grid.shape[1] ):
+      grid[i, j] = cost_function( np.array( [x, y] ), agent )
+      x += delta
+    y -= delta
+
+def animate_situation( p1, p2, grid_x, grid_y, delta, width, height ):
+  grid = np.zeros( ( height / delta, width / delta ) )
+
+  t2 = prediction.compute_angles( p2[:, :2] )
+  for i in xrange( t2.shape[0] ):
+    pl.clf()
+    update_grid( prediction.features.real, cost_function, grid_x, grid_y, delta, t2[i], grid )
+    if i == 0 or abs( p2[i,0] - p2[i-1,0] ) > 1.0:
+      goal = p2[i]
+      planned = [p1[i,0:2]]
+      start = i
+      print "goal set:", goal
+    cummulated, phi = prediction.astar.forward( grid, grid_x, grid_y, delta, goal )
+    path = prediction.astar.get_path( phi, grid_x, grid_y, delta, p1[i] )
+    #pl.imshow( cummulated, pl.cm.jet, None, None, None, extent = (grid_x, grid_x + width, grid_y - height, grid_y ) )
+    x, y = pl.meshgrid( 
+      pl.linspace( grid_x, grid_x + width, width / delta, endpoint = False ), 
+      pl.linspace( grid_y, grid_y - height, height / delta, endpoint = False )
+    )
+    imx = pl.zeros( cummulated.shape )
+    imy = pl.zeros( cummulated.shape )
+    ni.filters.sobel( cummulated, 1, imx )
+    ni.filters.sobel( cummulated, 0, imy )
+    u = np.sqrt( imx**2 + imy**2 )
+    m = max( np.max( imy ), np.max( imx ) ) 
+    imx =  -delta * imx / m
+    imy = delta * imy / m
+    pl.quiver( x, y, imx, imy )
+    point  = planned[-1]
+    coords = pl.array( [int( ( point[0] - grid_x ) / delta ), int( ( grid_y - point[1] ) / delta ) ] )
+    angle = pl.array( [imx[coords[1], coords[0]], imy[coords[1], coords[0] ] ] )
+    angle = angle / ( angle[0]**2 + angle[1]**2 )**0.5
+    point = point + angle * 0.1
+    planned.append( point )
+    pl.plot( p1[start:i, 0], p1[start:i, 1], 'r.', markersize = 10 )
+    pl.plot( p2[i, 0], p2[i, 1], 'g.', markersize = 10 )
+    pl.plot( path[:,0], path[:, 1], 'y.', markersize = 10 )
+    pl.plot( pl.array(planned)[:,0], pl.array(planned)[:, 1], 'b.', markersize = 10 )
+    pl.draw()
+
+files1 = [ 2, 4, 5, 8, 10]
+files2 = [ 1, 3, 6, 7, 9]
+p1 = []
+p2 = []
+for i in xrange( len( files1 ) ):
+  p1 += read_data( "data/tracks/trk_00%s.label_real" % ( "%i" % files1[i] ).rjust( 2, "0" ) )
+  p2 += read_data( "data/tracks/trk_00%s.label_real" % ( "%i" % files2[i] ).rjust( 2, "0" ) )
+p1 = np.array( p1 )
+p2 = np.array( p2 )
+
+# Experiment 1
+#f  = compute_features( prediction.features.real, p1, p2 )
+#cost_function = prediction.cost_functions.weighted_mahalanobis( 
+    #f, prediction.features.real, p1, p2, np.array( [[4., 0], [0, 4]] ) 
+#)
+
+#pl.ion()
+#pl.figure( 1 )
+#display_cost( prediction.features.real, cost_function, 100, 10 )
+
+#pl.figure( 2 )
+#animate_situation( p1, p2, -5., 5., 0.1, 15, 5 )
+
+
+# Experiment 2
+f  = compute_features( prediction.features.bins, p1, p2 )
+cost_function = prediction.cost_functions.weighted_mahalanobis( 
+    f, prediction.features.bins, p1, p2, np.array( [[9., 0], [0, 9]] ) 
+)
+pl.ion()
+pl.figure( 1 )
+display_cost( prediction.features.real, cost_function, 100, 10 )
+
+pl.figure( 2 )
+animate_situation( p1, p2, -5., 5., 0.25, 15, 5 )
+
+#pl.figure( 3 )
+#display_cost( prediction.features.bins, cost_function, 100, 10 )
