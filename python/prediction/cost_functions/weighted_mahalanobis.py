@@ -3,18 +3,19 @@ import numpy as np
 from math import *
 
 class weighted_mahalanobis( object ):
-  def __init__( self, features, module, p1, p2, dist_sigma ):
+  def __init__( self, features, module, p1, p2, dist_sigma, weighted = False ):
     self.module = module
     self.inv_dist_sigma = np.linalg.inv( dist_sigma )
 
-    weights = np.zeros( (p1.shape[0],) )
-    total = 0.0
-    for i in xrange( p1.shape[0] ):
-      weight = exp( -0.5 * prediction.mahalanobis( p1[i, :2], p2[i, :2], self.inv_dist_sigma ) )
-      weights[i] = weight
-      total += weight
-    weights /= total
-    weight = np.ones( (p1.shape[0],) )
+    self.weighted = weighted
+    weights = np.ones( (p1.shape[0],) )
+    if self.weighted:
+      total = 0.0
+      for i in xrange( p1.shape[0] ):
+        weight = exp( -0.5 * prediction.mahalanobis( p1[i, :2], p2[i, :2], self.inv_dist_sigma ) )
+        weights[i] = weight
+        total += weight
+      weights /= total
 
     self.mu = module.mean( features, weights )
     self.sigma     = module.covariance( self.mu, features, weights )
@@ -25,11 +26,8 @@ class weighted_mahalanobis( object ):
     diff  = self.module.difference( self.mu, value )
     cost  = np.dot( np.dot( diff, self.inv_sigma ), np.transpose( diff ) )**0.5
     diff  = v2[:2] - v1[:2]
-    decay = exp( -0.5 * np.dot( np.dot( diff, self.inv_dist_sigma ), np.transpose( diff ) ) ) 
-    decay = 1
-    if np.dot( diff, np.transpose( diff ) ) > 25:
-      decay = 0
-    else:
-      decay = 1
+    decay = 1 
+    if self.weighted:
+      decay = exp( -0.5 * np.dot( np.dot( diff, self.inv_dist_sigma ), np.transpose( diff ) ) ) 
     return cost * decay
 

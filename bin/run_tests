@@ -102,30 +102,31 @@ p1 = np.array( p1 )
 p2 = np.array( p2 )
 
 # Experiment 1
-#f  = compute_features( prediction.features.real, p1, p2 )
-#cost_function = prediction.cost_functions.weighted_mahalanobis( 
-    #f, prediction.features.real, p1, p2, np.array( [[4., 0], [0, 4]] ) 
-#)
+f  = compute_features( prediction.features.real, p1, p2 )
+cost_function = prediction.cost_functions.weighted_mahalanobis( 
+    f, prediction.features.real, p1, p2, np.array( [[9., 0], [0, 9.]] ), False
+)
 
+
+#pl.figure( 1 )
+#display_cost( prediction.features.real, cost_function, 100, 10 )
+
+pl.ion()
+pl.figure( 2 )
+animate_situation( p1, p2, -5., 5., 0.25, 15, 5 )
+
+
+# Experiment 2
+#f  = compute_features( prediction.features.bins, p1, p2 )
+#cost_function = prediction.cost_functions.weighted_mahalanobis( 
+    #f, prediction.features.bins, p1, p2, np.array( [[9., 0], [0, 9]] ) 
+#)
 #pl.ion()
 #pl.figure( 1 )
 #display_cost( prediction.features.real, cost_function, 100, 10 )
 
 #pl.figure( 2 )
-#animate_situation( p1, p2, -5., 5., 0.1, 15, 5 )
-
-
-# Experiment 2
-f  = compute_features( prediction.features.bins, p1, p2 )
-cost_function = prediction.cost_functions.weighted_mahalanobis( 
-    f, prediction.features.bins, p1, p2, np.array( [[9., 0], [0, 9]] ) 
-)
-pl.ion()
-pl.figure( 1 )
-display_cost( prediction.features.real, cost_function, 100, 10 )
-
-pl.figure( 2 )
-animate_situation( p1, p2, -5., 5., 0.25, 15, 5 )
+#animate_situation( p1, p2, -5., 5., 0.25, 15, 5 )
 
 #pl.figure( 3 )
 #display_cost( prediction.features.bins, cost_function, 100, 10 )
