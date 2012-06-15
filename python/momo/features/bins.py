@@ -8,11 +8,11 @@ feature_size = 9
 
 def compute( p1, p2 ):
   f = real.compute( p1, p2 )
-  dist_limits = np.array( [0.6, 0.8, 1.0, 1.2, 1.4, 1.8] )
+  dist_limits = np.array( [0.6, 0.8, 1.0, 1.2, 1.4, 1.6] )
   f_dist = 1.0 * (dist_limits > f[0] )
 
   mu    = np.array( [0., 0.5, 1.5] ) * pi
-  sigma = np.array( [0.4, 0.6, 0.6] )
+  sigma = np.array( [0.5, 0.6, 0.6] )
   f_angle = [0] * len( mu )
   for i in xrange( len( mu ) ):
     value = angle.difference( mu[i], f[1] )

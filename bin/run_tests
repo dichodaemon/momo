@@ -36,7 +36,7 @@ def display_cost( module, cost_function, pixel_size = 100, image_size = 10 ):
   delta = 1.0 * image_size / pixel_size
   side = image_size / 2.0
   update_grid( 
-    cost_map, cost_function, -side, side, delta, 
+    cost_function, -side, side, delta, 
     np.array([0., 0, 1, 0]) , cost_map 
   )
   pl.imshow( cost_map, pl.cm.jet, None, None, "none", extent = (-side, side, -side, side ) )
@@ -46,7 +46,7 @@ def update_grid( cost_function, grid_x, grid_y, delta, agent, grid ):
   for i in xrange( grid.shape[0] ):
     x = grid_x
     for j in xrange( grid.shape[1] ):
-      grid[i, j] = cost_function( np.array( [x, y] ), agent ) + 1
+      grid[i, j] = cost_function( np.array( [x, y] ), agent )
       x += delta
     y -= delta
 
@@ -87,13 +87,14 @@ class Experiment( object ):
     self.p2     = momo.compute_angles( p2[:, :2] )
     self.cases  = []
 
-  def add_case( self, cost_function, format_string ):
+  def add_case( self, cost_function, format_string, legend ):
     self.cases.append( {
       "cost_function": cost_function, 
-      "format_string": format_string
+      "format_string": format_string,
+      "legend": legend
     } )
 
-  def animate( self ):
+  def animate( self, quiver = False ):
     grid = np.zeros( ( self.height / self.delta, self.width / self.delta ) )
 
     for i in xrange( self.p2.shape[0] ):
@@ -110,8 +111,8 @@ class Experiment( object ):
       pl.axis( "scaled" )
       pl.xlim( self.grid_x, self.grid_x + self.width )
       pl.ylim( self.grid_y - self.height, self.grid_y )
-      pl.plot( self.p2[i, 0], self.p2[i, 1], 'ro', markersize = 10 )
-      pl.plot( self.p1[start:i, 0], self.p1[start:i, 1], 'r', markersize = 10 )
+      pl.plot( self.p2[i, 0], self.p2[i, 1], 'ro', markersize = 20 )
+      pl.plot( self.p1[start:i, 0], self.p1[start:i, 1], 'r', label = "data" )
       for c in self.cases:
         update_grid( 
           c["cost_function"], self.grid_x, self.grid_y, self.delta, self.p2[i], grid 
@@ -119,11 +120,13 @@ class Experiment( object ):
         cummulated, phi = momo.planning.forward( grid, self.grid_x, self.grid_y, self.delta, goal )
         path = momo.planning.get_path( phi, self.grid_x, self.grid_y, self.delta, self.p1[i] )
         x, y , imx, imy = compute_gradient( cummulated, self.grid_x, self.grid_y, self.delta, self.width, self.height )
-        #pl.quiver( x, y, imx, imy, color = c["format_string"][0] )
+        if quiver or c["legend"] == "bin/linear":
+          pl.quiver( x, y, imx, imy, color = c["format_string"][0] )
         point = c["planned"][-1]
         point = descend_gradient( point, distance, self.grid_x, self.grid_y, self.delta, imx, imy )
         c["planned"].append( point )
-        pl.plot( pl.array( c["planned"] )[:,0], pl.array( c["planned"] )[:, 1], c["format_string"], markersize = 10 )
+        pl.plot( pl.array( c["planned"] )[:,0], pl.array( c["planned"] )[:, 1], c["format_string"], markersize = 10, label = c["legend"] )
+      pl.legend()
       pl.draw()
 
 files1 = [ 2, 4, 5, 8, 10]
@@ -138,40 +141,48 @@ agent2 = np.array( agent2 )
 
 # Experiment 1
 
-exp1 = Experiment( -5., 5., 0.25, 15, 5, agent1, agent2 )
+exp1 = Experiment( -5., 5., 0.25, 15, 10, agent1, agent2 )
 
 f  = compute_features( momo.features.bins, agent1, agent2 )
 exp1.add_case( 
   momo.cost_functions.weighted_mahalanobis( 
-    f, momo.features.bins, agent1, agent2, np.array( [[9., 0], [0, 9.]] )
-  ),
-  "b+"
-)
-
-exp1.add_case( 
-  momo.cost_functions.weighted_mahalanobis( 
     f, momo.features.bins, agent1, agent2, None
   ),
-  "g."
+  "g.",
+  "bin/maha"
 )
 
 f  = compute_features( momo.features.real, agent1, agent2 )
 exp1.add_case( 
   momo.cost_functions.weighted_mahalanobis( 
-    f, momo.features.real, agent1, agent2, np.array( [[9., 0], [0, 9.]] )
-  ),
-  "y+"
-)
-
-exp1.add_case( 
-  momo.cost_functions.weighted_mahalanobis( 
     f, momo.features.real, agent1, agent2, None
   ),
-  "m."
+  "m.",
+  "real/maha"
 )
 
+values = pl.array( [
+  #2.9818323238080358e+00,
+  7.2213183456178232e-01,
+  2.1149875757160411e-01,
+  3.9621328379720239e-01,
+  4.4607338979218342e-01,
+  1.3542936628212632e-01,
+  6.5887691716844687e-01,
+  1.7442128092821079e+00,
+  5.8829665935162367e+00,
+  8.0276057251236477e+00
+] )
+
+exp1.add_case( 
+  momo.cost_functions.linear_combination( values ),
+  "b.",
+  "bin/linear"
+)
+
+pl.figure( 1, figsize = ( 20, 10 ), dpi = 75 )
+#display_cost( momo.features.real, momo.cost_functions.linear_combination( values ), 100, 10 )
+#pl.show()
 pl.ion()
-pl.figure( 1 )
-#display_cost( momo.features.real, cost_function, 100, 10 )
-exp1.animate()
+exp1.animate( False )
 
