@@ -1,4 +1,4 @@
-from prediction import *
+from momo import *
 import real
 
 import numpy as np

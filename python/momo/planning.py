@@ -11,7 +11,7 @@ def neighbors( grid, cummulated, phi, point ):
           di = i - point[0]
           dj = j - point[1]
           d = ( di**2 + dj**2 )**0.5
-          cost = cummulated[point[0], point[1]] + d * ( grid[i, j] + 0.1 ) #30 )
+          cost = cummulated[point[0], point[1]] + d * grid[i, j] 
           if cost < cummulated[i, j]:
             cummulated[i, j] = cost
             phi[i][j] = point 

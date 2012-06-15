@@ -1,18 +1,18 @@
-import prediction
+import momo
 import numpy as np
 from math import *
 
 class weighted_mahalanobis( object ):
-  def __init__( self, features, module, p1, p2, dist_sigma, weighted = False ):
+  def __init__( self, features, module, p1, p2, dist_sigma = None ):
     self.module = module
-    self.inv_dist_sigma = np.linalg.inv( dist_sigma )
+    self.inv_dist_sigma = None
 
-    self.weighted = weighted
     weights = np.ones( (p1.shape[0],) )
-    if self.weighted:
+    if dist_sigma != None:
+      self.inv_dist_sigma = np.linalg.inv( dist_sigma )
       total = 0.0
       for i in xrange( p1.shape[0] ):
-        weight = exp( -0.5 * prediction.mahalanobis( p1[i, :2], p2[i, :2], self.inv_dist_sigma ) )
+        weight = exp( -0.5 * momo.mahalanobis( p1[i, :2], p2[i, :2], self.inv_dist_sigma ) )
         weights[i] = weight
         total += weight
       weights /= total
@@ -27,7 +27,7 @@ class weighted_mahalanobis( object ):
     cost  = np.dot( np.dot( diff, self.inv_sigma ), np.transpose( diff ) )**0.5
     diff  = v2[:2] - v1[:2]
     decay = 1 
-    if self.weighted:
+    if self.inv_dist_sigma != None:
       decay = exp( -0.5 * np.dot( np.dot( diff, self.inv_dist_sigma ), np.transpose( diff ) ) ) 
     return cost * decay
 
