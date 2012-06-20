@@ -20,17 +20,6 @@ def read_data( filename ):
   f.close()
   return result
 
-def compute_features( module, p1, p2 ):
-  if not momo.synchronized( p1, p2 ):
-    raise "Arrays are not synchronized"
-
-  p2 = momo.compute_angles( p2[:, :2] )
-
-  f = np.zeros( (p2.shape[0], module.feature_size ) )
-  for i in xrange( p2.shape[0] ):
-    f[i] = module.compute( p1[i], p2[i] )
-  return f
-
 def display_cost( module, cost_function, pixel_size = 100, image_size = 10 ):
   cost_map = np.zeros( ( pixel_size, pixel_size ) )
   delta = 1.0 * image_size / pixel_size
@@ -94,7 +83,7 @@ class Experiment( object ):
       "legend": legend
     } )
 
-  def animate( self, quiver = False ):
+  def animate( self, quiver = [] ):
     grid = np.zeros( ( self.height / self.delta, self.width / self.delta ) )
 
     for i in xrange( self.p2.shape[0] ):
@@ -105,14 +94,12 @@ class Experiment( object ):
           c["planned"] = [self.p1[i,0:2]]
         start = i
       else:
-        d = self.p1[i] - self.p1[i-1]
+        d = self.p1[i, :2] - self.p1[i-1, :2]
         distance = pl.dot( d, d )**0.5
       pl.clf()
       pl.axis( "scaled" )
       pl.xlim( self.grid_x, self.grid_x + self.width )
       pl.ylim( self.grid_y - self.height, self.grid_y )
-      pl.plot( self.p2[i, 0], self.p2[i, 1], 'ro', markersize = 20 )
-      pl.plot( self.p1[start:i, 0], self.p1[start:i, 1], 'r', label = "data" )
       for c in self.cases:
         update_grid( 
           c["cost_function"], self.grid_x, self.grid_y, self.delta, self.p2[i], grid 
@@ -120,12 +107,14 @@ class Experiment( object ):
         cummulated, phi = momo.planning.forward( grid, self.grid_x, self.grid_y, self.delta, goal )
         path = momo.planning.get_path( phi, self.grid_x, self.grid_y, self.delta, self.p1[i] )
         x, y , imx, imy = compute_gradient( cummulated, self.grid_x, self.grid_y, self.delta, self.width, self.height )
-        if quiver or c["legend"] == "bin/linear":
+        if c["legend"] in quiver:
           pl.quiver( x, y, imx, imy, color = c["format_string"][0] )
         point = c["planned"][-1]
         point = descend_gradient( point, distance, self.grid_x, self.grid_y, self.delta, imx, imy )
         c["planned"].append( point )
         pl.plot( pl.array( c["planned"] )[:,0], pl.array( c["planned"] )[:, 1], c["format_string"], markersize = 10, label = c["legend"] )
+      pl.plot( self.p2[i, 0], self.p2[i, 1], 'ro', markersize = 20 )
+      pl.plot( self.p1[start:i + 1, 0], self.p1[start:i + 1, 1], 'r', label = "data" )
       pl.legend()
       pl.draw()
 
@@ -143,19 +132,17 @@ agent2 = np.array( agent2 )
 
 exp1 = Experiment( -5., 5., 0.25, 15, 10, agent1, agent2 )
 
-f  = compute_features( momo.features.bins, agent1, agent2 )
 exp1.add_case( 
   momo.cost_functions.weighted_mahalanobis( 
-    f, momo.features.bins, agent1, agent2, None
+    momo.features.bins, agent1, agent2, None
   ),
   "g.",
-  "bin/maha"
+  "bins/maha"
 )
 
-f  = compute_features( momo.features.real, agent1, agent2 )
 exp1.add_case( 
   momo.cost_functions.weighted_mahalanobis( 
-    f, momo.features.real, agent1, agent2, None
+    momo.features.real, agent1, agent2, None
   ),
   "m.",
   "real/maha"
@@ -177,12 +164,25 @@ values = pl.array( [
 exp1.add_case( 
   momo.cost_functions.linear_combination( values ),
   "b.",
-  "bin/linear"
+  "bins/linear"
 )
+
+exp1.add_case( 
+  momo.cost_functions.gaussian_mixture( momo.features.real, agent1, agent2, 4 ),
+  "y.",
+  "real/gmm"
+)
+
+exp1.add_case( 
+  momo.cost_functions.growing_gaussian_mixture( momo.features.real, agent1, agent2 ),
+  "k.",
+  "real/ggmm"
+)
+
 
 pl.figure( 1, figsize = ( 20, 10 ), dpi = 75 )
 #display_cost( momo.features.real, momo.cost_functions.linear_combination( values ), 100, 10 )
 #pl.show()
 pl.ion()
-exp1.animate( False )
+exp1.animate( ["real/gmm"] )
 

@@ -3,9 +3,11 @@ import numpy as np
 from math import *
 
 class weighted_mahalanobis( object ):
-  def __init__( self, features, module, p1, p2, dist_sigma = None ):
+  def __init__( self, module, p1, p2, dist_sigma = None ):
     self.module = module
     self.inv_dist_sigma = None
+
+    features = momo.compute_features( module, p1, p2 )
 
     weights = np.ones( (p1.shape[0],) )
     if dist_sigma != None:
