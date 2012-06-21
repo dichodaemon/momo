@@ -173,17 +173,17 @@ class growing_gaussian_mixture( object ):
 
 
 
-function result = mvnrnd( mu, Sigma, K )
-  if nargin == 3
-    mu = repmat( mu, K, 1 );
-  end
-  [n, d] = size( mu );
-  try
-    U = chol( Sigma );
-  catch
-    [e, Lambda] = eig( Sigma );
-    U = sqrt( Lambda ) * E';
-  end
-  result = randn( n, d ) * U + mu;
-end
+#function result = mvnrnd( mu, Sigma, K )
+  #if nargin == 3
+    #mu = repmat( mu, K, 1 );
+  #end
+  #[n, d] = size( mu );
+  #try
+    #U = chol( Sigma );
+  #catch
+    #[e, Lambda] = eig( Sigma );
+    #U = sqrt( Lambda ) * E';
+  #end
+  #result = randn( n, d ) * U + mu;
+#end
 

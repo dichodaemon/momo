@@ -173,15 +173,19 @@ exp1.add_case(
   "real/gmm"
 )
 
-exp1.add_case( 
-  momo.cost_functions.growing_gaussian_mixture( momo.features.real, agent1, agent2 ),
-  "k.",
-  "real/ggmm"
-)
+#exp1.add_case( 
+  #momo.cost_functions.growing_gaussian_mixture( momo.features.real, agent1, agent2 ),
+  #"k.",
+  #"real/ggmm"
+#)
 
 
 pl.figure( 1, figsize = ( 20, 10 ), dpi = 75 )
-#display_cost( momo.features.real, momo.cost_functions.linear_combination( values ), 100, 10 )
+#display_cost( momo.features.bins, momo.cost_functions.linear_combination( values ), 100, 10 )
+#pl.figure( 2, figsize = ( 20, 10 ), dpi = 75 )
+#display_cost( momo.features.bins, momo.cost_functions.weighted_mahalanobis( 
+    #momo.features.real, agent1, agent2, None
+  #), 100, 10 )
 #pl.show()
 pl.ion()
 exp1.animate( ["real/gmm"] )
