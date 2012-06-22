@@ -15,9 +15,10 @@ def difference( v1, v2 ):
 
 def covariance( mean, features, weights ):
   p = weights / np.sum( weights )
+  p = np.diag( p )
   diff = np.zeros( ( features.shape[0], feature_size ) )
   for i in xrange( features.shape[0] ):
     diff[i] = difference( mean, features[i] )
-  return np.dot( np.dot( np.transpose( diff ), np.diag( p ) ), diff )
+  return np.dot( np.dot( np.transpose( diff ), p ), diff )
 
 

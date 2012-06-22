@@ -1,29 +1,6 @@
-#! /usr/bin/python
-# -*- coding: utf-8 -*-
-
-import sys
-import os
-
-BASE_DIR = os.path.abspath( os.path.join( os.path.dirname( __file__ ), ".." ) )
-path     = os.path.abspath( os.path.join( BASE_DIR, "python" ) )
-sys.path.append( path )
-
-import momo
 import numpy as np
 from math import *
 import random
-
-def plot_gaussian( mu, sigma, edge = "k", face = "1.0" ):
-  from matplotlib.patches import Ellipse
-  U, s, Vh = np.linalg.svd( sigma )
-  e1 = 2 * sqrt( s[0] )
-  e2 = 2 * sqrt( s[1] )
-  theta = np.arange( 0, 2 * pi, 0.01 )
-  xx = e1 * np.cos( theta )
-  yy = e2 * np.sin( theta )
-  coord = np.vstack( [xx, yy] )
-  coord = np.dot( U, coord )
-  pl.plot( coord[0, :] + mu[0], coord[1, :] + mu[1], edge, linewidth = 2.0 )
 
 class adaptive_gaussian_mixture_model( object ):
   def __init__( self, module ):
@@ -158,7 +135,6 @@ class adaptive_gaussian_mixture_model( object ):
         old_log_like = log_like
         log_like = self.log_likelihood( k, w_expectation )
         cost = self.cost( w_expectation, N, k, self.prior )
-        print "optimizing", k, log_like
         if abs( ( log_like - old_log_like ) / old_log_like ) < epsilon:
           break
 
@@ -199,52 +175,4 @@ class adaptive_gaussian_mixture_model( object ):
         self.inv_sigma.append( inv_sigma[i] )
         self.prior.append( prior[i] )
     self.k = len( self.prior )
-
-
-
-if __name__ == "__main__":
-  import matplotlib.pylab as pl
-
-  mu    = [ np.array( [0, m * 2] ) for m in xrange( 3 )]
-  sigma = [np.array( [ [ 2., 0.], [0.,  0.2] ] ) for m in xrange( 3 )]
-
-  mu[2] = mu[1] * 1
-  sigma[2] = np.array( [[ 0.5, 0], [0, 0.05] ] )
-
-  data = []
-
-  for m in xrange( 3 ):
-    for i in xrange( 300 ):
-      noise = np.random.normal( size = mu[m].shape[0] )
-      chol  = np.linalg.cholesky( sigma[m] )
-      val   = mu[m] + np.dot( noise, chol )
-      data.append( val )
-  data = np.array( data )
-  
-  def begin_draw():
-    pl.ion()
-    pl.figure( 1, figsize = ( 20, 20 ), dpi = 50 )
-    pl.clf()
-    pl.axis( "scaled" )
-    pl.xlim( -4, 4 )
-    pl.ylim( -2, 6 )
-    pl.plot( [d[0] for d in data], [d[1] for d in data], "b." )
-    for m in xrange( 3 ):
-      plot_gaussian( mu[m], sigma[m], "r" )
-
-  def end_draw():
-    pl.draw()
-    #pl.show()
-
-  #begin_draw()
-  #end_draw()
-  agmm = adaptive_gaussian_mixture_model( momo.features.default )
-  agmm.learn( data )
-  begin_draw()
-  for m in xrange( agmm.k ):
-    if agmm.prior[m] > 0.0:
-      plot_gaussian( agmm.mu[m], agmm.sigma[m], str( agmm.prior[m] ) )
-  end_draw()
-  pl.ioff()
-  pl.show()
 

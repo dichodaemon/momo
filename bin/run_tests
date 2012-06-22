@@ -140,13 +140,13 @@ exp1.add_case(
   "bins/maha"
 )
 
-exp1.add_case( 
-  momo.cost_functions.weighted_mahalanobis( 
-    momo.features.real, agent1, agent2, None
-  ),
-  "m.",
-  "real/maha"
-)
+#exp1.add_case( 
+  #momo.cost_functions.weighted_mahalanobis( 
+    #momo.features.real, agent1, agent2, None
+  #),
+  #"m.",
+  #"real/maha"
+#)
 
 values = pl.array( [
   #2.9818323238080358e+00,
@@ -167,17 +167,17 @@ exp1.add_case(
   "bins/linear"
 )
 
-exp1.add_case( 
-  momo.cost_functions.gaussian_mixture( momo.features.real, agent1, agent2, 4 ),
-  "y.",
-  "real/gmm"
-)
-
 #exp1.add_case( 
-  #momo.cost_functions.growing_gaussian_mixture( momo.features.real, agent1, agent2 ),
-  #"k.",
-  #"real/ggmm"
+  #momo.cost_functions.gaussian_mixture( momo.features.real, agent1, agent2, 4 ),
+  #"y.",
+  #"real/gmm"
 #)
+
+exp1.add_case( 
+  momo.cost_functions.adaptive_gaussian_mixture( momo.features.real, agent1, agent2 ),
+  "k.",
+  "real/ggmm"
+)
 
 
 pl.figure( 1, figsize = ( 20, 10 ), dpi = 75 )
