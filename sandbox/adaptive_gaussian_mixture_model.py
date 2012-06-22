@@ -30,7 +30,7 @@ class adaptive_gaussian_mixture_model( object ):
 
   def learn( self, data ):
     kmin = 1
-    kmax = len( data ) / 3
+    kmax = len( data ) / 10
     dim  = data[0].shape[0]
     N = dim + dim * ( dim + 1 ) / 2
 
@@ -54,14 +54,14 @@ class adaptive_gaussian_mixture_model( object ):
           diff = self.module.difference( mu[m], data[i] )
           maha = np.dot( np.dot( diff, inv_sigma[m] ), np.transpose( diff ) )
           tmp  = exp( -0.5 * maha )
-          result[m, i] = tmp
+          result[m, i] = tmp + 1E-300
     return result
 
   def compute_w_expectation( self, expectation, prior ):
     k, n = expectation.shape
     result = np.zeros( (k, n) )
     for m in xrange( k ):
-      result[m, :] = expectation[m, :] * prior[m]
+      result[m, :] = expectation[m, :] * prior[m] 
     return result
 
   def normalize_expectation( self, w_expectation ):
@@ -89,13 +89,12 @@ class adaptive_gaussian_mixture_model( object ):
     result = result / np.sum( result )
     return result
 
-  def log_likelihood( self, w_expectation ):
+  def log_likelihood( self, actual_k, w_expectation ):
     k, n = w_expectation.shape
     result = 0
     for i in xrange( n ):
-      z = np.sum( w_expectation[:, i] )
-      if z > 0:
-        result += log( z )
+      z = np.sum( w_expectation[:, i] + actual_k * 1E-300 )
+      result += log( z )
     return result
 
   def cost( self, w_expectation, N, actual_k, prior ):
@@ -106,15 +105,15 @@ class adaptive_gaussian_mixture_model( object ):
         log_sum += log( prior[m] )
     tmp  = 0.5 * N * log_sum
     tmp += (0.5 * N + 0.5 ) * actual_k * log( n )
-    return tmp - self.log_likelihood( w_expectation )
+    return tmp - self.log_likelihood( actual_k, w_expectation )
 
   def optimize( self, kmin, kmax, N, data ):
-    epsilon = 1E-5
+    epsilon = 1E-10
     expectation  = self.compute_expectation( self.prior, kmax, data, self.mu, self.inv_sigma )
     w_expectation = self.compute_w_expectation( expectation, self.prior )
     n_expectation = self.normalize_expectation( w_expectation )
 
-    log_like = self.log_likelihood( w_expectation )
+    log_like = self.log_likelihood( kmax, w_expectation )
     cost     = self.cost( w_expectation, N, kmax, self.prior )
     cost_min = cost
     best     = self.clone_parameters()
@@ -138,16 +137,18 @@ class adaptive_gaussian_mixture_model( object ):
 
             self.prior = self.compute_prior( n_expectation, N )
 
-            if self.prior[m] <= 0.0:
-              k = np.sum( ( self.prior > 0 ) )
-            else:
-              expectation  = self.compute_expectation( self.prior, kmax, data, self.mu, self.inv_sigma )
+            k = np.sum( ( self.prior > 0 ) )
+            expectation  = self.compute_expectation( self.prior, kmax, data, self.mu, self.inv_sigma )
+            #if self.prior[m] <= 0.0:
+              #k = np.sum( ( self.prior > 0 ) )
+            #else:
+              #expectation  = self.compute_expectation( self.prior, kmax, data, self.mu, self.inv_sigma )
 
         expectation  = self.compute_expectation( self.prior, kmax, data, self.mu, self.inv_sigma )
         w_expectation = self.compute_w_expectation( expectation, self.prior )
         n_expectation = self.normalize_expectation( w_expectation )
         old_log_like = log_like
-        log_like = self.log_likelihood( w_expectation )
+        log_like = self.log_likelihood( k, w_expectation )
         cost = self.cost( w_expectation, N, k, self.prior )
 
         if old_log_like - log_like < abs( epsilon * old_log_like ):
@@ -183,25 +184,25 @@ if __name__ == "__main__":
   import matplotlib.pylab as pl
 
   mu    = [ np.array( [0, m * 5] ) for m in xrange( 3 )]
-  sigma = [np.array( [ [ 10., 0.], [0.,  5.] ] ) for m in xrange( 3 )]
+  sigma = [np.array( [ [ 10., 0.], [0.,  1.] ] ) for m in xrange( 3 )]
 
   data = []
 
   for m in xrange( 3 ):
-    for i in xrange( 500 ):
+    for i in xrange( 200 ):
       data.append( np.random.multivariate_normal( mu[m], sigma[m] ) )
   data = np.array( data )
   
   def begin_draw():
     #pl.ion()
-    pl.figure( 1 )
+    pl.figure( 1, figsize = ( 20, 20 ), dpi = 75 )
     pl.clf()
     pl.axis( "scaled" )
     pl.xlim( -20, 20 )
     pl.ylim( -15, 25 )
+    pl.plot( [d[0] for d in data], [d[1] for d in data], "b." )
     for m in xrange( 3 ):
       plot_gaussian( mu[m], sigma[m] )
-    pl.plot( [d[0] for d in data], [d[1] for d in data], "b." )
 
   def end_draw():
     #pl.draw()
