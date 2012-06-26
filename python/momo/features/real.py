@@ -5,12 +5,18 @@ from math import *
 
 feature_size = 2
 
-def compute( p1, p2 ):
-  dist  = distance( p1[:2], p2[:2] )
+def compute( frame ):
+  p1 = frame[0]
+  p2 = frame[1]
+  min_dist = distance( p1[:2], p2[:2] )
+  for p in frame[2:]:
+    dist = distance( p1[:2], p[:2] )
+    if dist < min_dist:
+      p2 = p
   alpha = angle.as_vector( p1[:2] - p2[:2] )
   theta = p2[2:4]
   beta  = angle.difference( alpha, theta )
-  return np.hstack( [dist, beta] )
+  return np.hstack( [min_dist, beta] )
 
 def mean( features, weights = 1.0 ):  
   p    = weights / np.sum( weights )

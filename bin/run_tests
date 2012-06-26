@@ -108,6 +108,7 @@ class Experiment( object ):
         path = momo.planning.get_path( phi, self.grid_x, self.grid_y, self.delta, self.p1[i] )
         x, y , imx, imy = compute_gradient( cummulated, self.grid_x, self.grid_y, self.delta, self.width, self.height )
         if c["legend"] in quiver:
+          pl.imshow( grid, pl.cm.jet, None, None, "none", extent = (self.grid_x, self.grid_x +self.width, self.grid_y - self.height, self.grid_y ) )
           pl.quiver( x, y, imx, imy, color = c["format_string"][0] )
         point = c["planned"][-1]
         point = descend_gradient( point, distance, self.grid_x, self.grid_y, self.delta, imx, imy )
@@ -161,11 +162,11 @@ values = pl.array( [
   8.0276057251236477e+00
 ] )
 
-exp1.add_case( 
-  momo.cost_functions.linear_combination( values ),
-  "b.",
-  "bins/linear"
-)
+#exp1.add_case( 
+  #momo.cost_functions.linear_combination( values ),
+  #"b.",
+  #"bins/linear"
+#)
 
 #exp1.add_case( 
   #momo.cost_functions.gaussian_mixture( momo.features.real, agent1, agent2, 4 ),
@@ -180,13 +181,18 @@ exp1.add_case(
 )
 
 
-pl.figure( 1, figsize = ( 20, 10 ), dpi = 75 )
-#display_cost( momo.features.bins, momo.cost_functions.linear_combination( values ), 100, 10 )
-#pl.figure( 2, figsize = ( 20, 10 ), dpi = 75 )
+#pl.figure( 1, figsize = ( 10, 10 ), dpi = 75 )
+#display_cost( momo.features.bins, momo.cost_functions.linear_combination( values ), 100, 20 )
+#pl.figure( 2, figsize = ( 10, 10 ), dpi = 75 )
 #display_cost( momo.features.bins, momo.cost_functions.weighted_mahalanobis( 
-    #momo.features.real, agent1, agent2, None
-  #), 100, 10 )
+  #momo.features.real, agent1, agent2, None
+#), 100, 20 )
+#pl.figure( 3, figsize = ( 10, 10 ), dpi = 75 )
+#display_cost( momo.features.real, momo.cost_functions.adaptive_gaussian_mixture( 
+  #momo.features.real, agent1, agent2 ), 100, 20 
+#)
 #pl.show()
+pl.figure( 1, figsize = ( 20, 10 ), dpi = 75 )
 pl.ion()
-exp1.animate( ["real/gmm"] )
+exp1.animate( ["real/ggmm"] )
 

@@ -1,5 +1,6 @@
 import angle
 import numpy as np
+import random
 
 def distance( v1, v2 ):
   diff = v1 - v2
@@ -24,14 +25,15 @@ def compute_angles( data ):
     angles[i] = angle.as_vector( p2 - p1 )
   return np.hstack( [data, angles] )
 
-def compute_features( module, p1, p2 ):
-  if not synchronized( p1, p2 ):
-    raise "Arrays are not synchronized"
-
-  p2 = compute_angles( p2[:, :2] )
-
-  f = np.zeros( (p2.shape[0], module.feature_size ) )
-  for i in xrange( p2.shape[0] ):
-    f[i] = module.compute( p1[i], p2[i] )
-  return f
+def compute_features( module, agents, snapshots ):
+  f = []
+  for s in snapshots:
+    tmp = []
+    for agent_id, value in s:
+      tmp.append( agents[agent_id][value] )
+    for i in xrange( len( s ) ):
+      f.append( module.compute( tmp ) )
+      t = tmp.pop( 0 )
+      tmp.append( t )
+  return np.array( random.sample( f, 3000 ) )
 

@@ -110,6 +110,7 @@ class adaptive_gaussian_mixture_model( object ):
       while True:
         # Sequentially update all Gaussians
         for m in xrange( kmax ):
+          print k, m
           if self.prior[m] > 0:
             w_expectation = self.compute_w_expectation( expectation, self.prior )
             n_expectation = self.normalize_expectation( w_expectation )
@@ -135,6 +136,7 @@ class adaptive_gaussian_mixture_model( object ):
         old_log_like = log_like
         log_like = self.log_likelihood( k, w_expectation )
         cost = self.cost( w_expectation, N, k, self.prior )
+        print k, m, cost, log_like
         if abs( ( log_like - old_log_like ) / old_log_like ) < epsilon:
           break
 

@@ -1,0 +1,169 @@
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sys
+import os
+
+BASE_DIR = os.path.abspath( os.path.join( os.path.dirname( __file__ ), ".." ) )
+path     = os.path.abspath( os.path.join( BASE_DIR, "python" ) )
+sys.path.append( path )
+
+import time
+import momo
+import momo.planning
+import numpy as np
+import matplotlib.pylab as pl
+import scipy.ndimage as ni
+
+def read_data( filename ):
+  f = open( filename )
+  data = [[float( v ) for v in l.split()] for l in f]
+  f.close()
+
+  agents = {}
+  frame  = -1
+  snapshots = []
+  snapshot = []
+
+  for d in data:
+    if d[0] != frame:
+      if len( snapshot ) > 0:
+        snapshots.append( snapshot )
+      snapshot = []
+      frame = d[0]
+    if not d[2] in agents:
+      agents[d[2]] = []
+    agents[d[2]].append( np.array( d[3:] ) )
+    snapshot.append( [d[2], len( agents[d[2]] ) - 1] )
+  for agent_id, positions in agents.items():
+    agents[agent_id] = momo.compute_angles( np.array( positions ) )
+  frames = []
+  for s in snapshots:
+    frame = []
+    for a in s:
+      frame.append( agents[a[0]][a[1]] )
+    frames.append( frame )
+  return agents, snapshots
+
+def update_grid( cost_function, grid_x, grid_y, delta, agent, grid ):
+  y = grid_y
+  for i in xrange( grid.shape[0] ):
+    x = grid_x
+    for j in xrange( grid.shape[1] ):
+      grid[i, j] = cost_function( np.array( [x, y] ), agent )
+      x += delta
+    y -= delta
+
+def compute_gradient( grid, grid_x, grid_y, delta, width, height ):
+  x, y = pl.meshgrid( 
+    pl.linspace( grid_x, grid_x + width, width / delta, endpoint = False ), 
+    pl.linspace( grid_y, grid_y - height, height / delta, endpoint = False )
+  )
+  imx = pl.zeros( grid.shape )
+  imy = pl.zeros( grid.shape )
+  ni.filters.sobel( grid, 1, imx )
+  ni.filters.sobel( grid, 0, imy )
+  imx = -imx
+  return x, y, imx, imy
+
+def descend_gradient( start, length, grid_x, grid_y, delta, imx, imy, step = 0.05 ):
+  point = start * 1.
+  while True:
+    coords = pl.array( [int( ( point[0] - grid_x ) / delta ), int( ( grid_y - point[1] ) / delta ) ] )
+    angle = pl.array( [imx[coords[1], coords[0]], imy[coords[1], coords[0] ] ] )
+    angle = angle / ( angle[0]**2 + angle[1]**2 )**0.5
+    if length > step:
+      point = point + angle * step
+    else:
+      point = point + angle * length
+      break
+    length -= step
+  return point
+
+class Experiment( object ):
+  def __init__( self, grid_x, grid_y, delta, width, height, agents, snapshots ):
+    self.grid_x = grid_x
+    self.grid_y = grid_y
+    self.delta  = delta
+    self.width  = width
+    self.height = height
+    self.cases  = []
+    self.agents = agents
+    self.snapshots = snapshots
+
+  def add_case( self, cost_function, format_string, legend ):
+    self.cases.append( {
+      "cost_function": cost_function, 
+      "format_string": format_string,
+      "legend": legend
+    } )
+
+  def animate( self, quiver = [] ):
+    x = {}
+    y = {}
+    x1 = []
+    y1 = []
+    for a in self.agents.values():
+      x1.append( a[-1][0] )
+      y1.append( a[-1][1] )
+    for s in self.snapshots:
+      pl.clf()
+      pl.axis( "scaled" )
+      pl.xlim( self.grid_x, self.grid_x + self.width )
+      pl.ylim( self.grid_y - self.height, self.grid_y )
+      tm = time.time()
+      for agent_id, index in s:
+        if not agent_id in x:
+          x[agent_id] = []
+          y[agent_id] = []
+        x[agent_id].append( self.agents[agent_id][index][0] )
+        y[agent_id].append( self.agents[agent_id][index][1] )
+      for agent_id in x.keys():
+        pl.plot( x[agent_id], y[agent_id], 'r' )
+      pl.plot( x1, y1, "ko" )
+      #pl.legend()
+      pl.draw()
+      new_time = time.time()
+      print new_time - tm
+      tm = new_time
+
+      #for agent_id in x.keys():
+        #if len( x[agent_id] ) == len( self.agents[agent_id] ):
+          #del x[agent_id]
+          #del y[agent_id]
+
+agents, snapshots = read_data( "data/tracker/freiburg-station.txt" )
+
+# Experiment 1
+
+exp1 = Experiment( -5, 30., 0.25, 35, 45, agents, snapshots )
+
+#exp1.add_case( 
+  #momo.cost_functions.weighted_mahalanobis( 
+    #momo.features.bins, data, None
+  #),
+  #"g.",
+  #"bins/maha"
+#)
+
+exp1.add_case( 
+  momo.cost_functions.adaptive_gaussian_mixture( momo.features.real, agents, snapshots, kmax = 25),
+  "k.",
+  "real/ggmm"
+)
+
+
+#pl.figure( 1, figsize = ( 20, 10 ), dpi = 75 )
+pl.ion()
+exp1.animate( ["real/ggmm"] )
+#for i in xrange( len( snapshot ) - 1 ):
+  #min_dist = 1E6
+  #min_j = -1
+  #for j in xrange( 1, len( snapshot ) ):
+    #diff = self.agents[snapshot[i][0]][snapshot[i][1]  - self.agents[snapshot[j][0]][snapshot[j][1]
+    #dist = np.dot( diff, diff )
+    #if dist < min_dist:
+      #min_dist = dist
+      #min_j    = j
+  #self.pairs.append( [snapshot[i], snapshot[j]] )
+
