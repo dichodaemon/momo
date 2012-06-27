@@ -158,6 +158,7 @@ class adaptive_gaussian_mixture_model( object ):
         self.prior[min_idx] = 0
         k = np.sum( ( self.prior > 0 ) )
 
+        # Update expectation
         self.prior = self.prior / np.sum( self.prior )
         expectation  = self.compute_expectation( self.prior, kmax, data, self.mu, self.sigma, self.inv_sigma )
         w_expectation = self.compute_w_expectation( expectation, self.prior )
@@ -169,6 +170,7 @@ class adaptive_gaussian_mixture_model( object ):
     self.inv_sigma = []
     self.prior = []
 
+    # Shrink Gaussian arrays
     mu, sigma, inv_sigma, prior = best
     for i in xrange( kmax ):
       if prior[i] > 0:
