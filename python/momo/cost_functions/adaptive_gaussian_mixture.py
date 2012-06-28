@@ -4,9 +4,9 @@ from math import *
 import random
 
 class adaptive_gaussian_mixture( object ):
-  def __init__( self, module, agents, snapshots, kmax = None ):
+  def __init__( self, module, data, kmax = None ):
     self.module = module
-    features = momo.compute_features( module, agents, snapshots )
+    features = momo.compute_features( module, data )
 
     print len( features )
     self.agmm = momo.clustering.adaptive_gaussian_mixture_model( module )

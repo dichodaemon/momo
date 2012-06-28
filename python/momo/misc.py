@@ -25,13 +25,25 @@ def compute_angles( data ):
     angles[i] = angle.as_vector( p2 - p1 )
   return np.hstack( [data, angles] )
 
-def compute_features( module, agents, snapshots ):
+def frames( data ):
+  frame    = data[0][0]
+  snapshot = []
+  for d in data:
+    n_frame = d[0]
+    if n_frame == frame:
+      snapshot.append( d )
+    else:
+      yield( snapshot )
+      frame = n_frame
+      snapshot = []
+
+def compute_features( module, data ):
   f = []
-  for s in snapshots:
+  for frame in frames( data ):
     tmp = []
-    for agent_id, value in s:
-      tmp.append( agents[agent_id][value] )
-    for i in xrange( len( s ) ):
+    for o_frame, o_time, o_id, o_x, o_y, o_dx, o_dy in frame:
+      tmp.append( np.array( [o_x, o_y, o_dx, o_dy] ) )
+    for i in xrange( len( frame ) ):
       f.append( module.compute( tmp ) )
       t = tmp.pop( 0 )
       tmp.append( t )

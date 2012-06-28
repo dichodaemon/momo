@@ -15,42 +15,43 @@ import numpy as np
 import matplotlib.pylab as pl
 import scipy.ndimage as ni
 
-
-def f( x, delta ):
-  result = np.array( x.shape )
-  result[3] = x[3]
-  result[2] = x[2]
-  result[0] = x[0] + delta * ( x[2]**2 + x[3]**2 )**0.5 * cos( atan( x[3] / x[2] ) )
-  result[1] = x[1] + delta * ( x[2]**2 + x[3]**2 )**0.5 * sin( atan( x[3] / x[2] ) )
-  return result
-
-def jacobian( f, x ):
-  result = []
-  for i in xrange( x.shape[0] ):
-    result.append( ( f( x, 1E-6 ) - f( x, 0 ) ) * 1E6 )
-  return np.transpose( np.array( result ) )
-
-
 class Track( object ):
   def __init__( self, observation ):
-    self.__mean = np.array( 4 )
+    self.__mean = np.array( [0.] * 4 )
     self.__mean[0:2] = observation
-    self.q = np.array( [
-      [ 0.01, 0, 0, 0], 
-      [ 0, 0.01, 0, 0], 
-      [ 0, 0, 0.5, 0], 
-      [ 0, 0, 0, 0.5]
+    self.a = np.array( [
+      [ 1., 0., 1., 0. ],
+      [ 0., 1., 0., 1. ],
+      [ 0., 0., 1., 0. ],
+      [ 0., 0., 0., 1. ]
     ] )
-    self.r = np.ones( 2 ) * 0.3
-    self.p = np.ones( 4 )
-  
+    self.c = np.array( [
+      [ 1., 0., 0., 0. ],
+      [ 0., 1., 0., 0. ]
+    ] )
+    self.r = 0.002
+    self.q = np.eye( 2 ) * 1.
+    self.p = np.eye( 4 ) * 1.
+
   def predict( self, delta ):
-
-
+    self.__mean = np.dot( self.a, self.__mean )
+    d3 = delta**3 * self.r / 3.
+    d2 = delta**2 * self.r / 2.
+    d  = delta * self.r
+    r = np.array( [
+      [d3, 0., d2, 0.],
+      [0., d3, 0., d2],
+      [d2, 0.,  d,  0],
+      [0,  d2,  0,  d]
+    ] )
+    self.p = np.dot( np.dot( self.a, self.p ), np.transpose( self.a ) ) + self.r
 
   def update( self, observation ):
-    self.__mean = observation
-
+    tmp = np.dot( np.dot( self.c, self.p ), np.transpose( self.c ) ) + self.q
+    tmp = np.linalg.inv( tmp )
+    k = np.dot( np.dot( self.p, np.transpose( self.c ) ), tmp )
+    self.__mean = self.__mean + np.dot( k, observation - np.dot( self.c, self.__mean ) )
+    self.p = np.dot( np.eye( 4 ) - np.dot( k, self.c ), self.p )
 
   def get_mean( self ):
     return self.__mean
@@ -60,9 +61,16 @@ class Track( object ):
 
   mean = property( get_mean, set_mean )
 
+def split_line( line ):
+  v = line.split()
+  return [
+    int( v[0] ), float( v[1] ), int( v[2] ), 
+    float( v[3] ), float( v[4] )
+  ]
+
 def read_data( filename ):
   f = open( filename )
-  data = [[v for v in l.split()] for l in f]
+  data = [split_line( l ) for l in f]
   f.close()
   return data
 
@@ -72,12 +80,7 @@ def filter_data( data ):
   old_timestamp = None
   delta = 0
   for o in data:
-    frame = float( o[0] )
-    timestamp = float( o[1] )
-    o_id = int( o[2] )
-    x = float( o[3] )
-    y = float( o[4] )
-
+    frame, timestamp, o_id, x, y  = o
     if timestamp != old_timestamp:
       if old_timestamp != None:
         delta = timestamp - old_timestamp
@@ -93,4 +96,7 @@ def filter_data( data ):
 
 data = filter_data( read_data( sys.argv[1] ) )
 
-print data
+for d in data:
+  print d[0], d[1], d[2], d[3][0], d[3][1], d[3][2], d[3][3]
+
+
