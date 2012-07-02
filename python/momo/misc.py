@@ -2,6 +2,19 @@ import angle
 import numpy as np
 import random
 
+def split_line( line ):
+  v = line.split()
+  return [
+    int( v[0] ), float( v[1] ), int( v[2] ), 
+    float( v[3] ), float( v[4] ), float( v[5] ), float( v[6] )
+  ]
+
+def read_data( filename ):
+  f = open( filename )
+  data = [split_line( l ) for l in f]
+  f.close()
+  return data
+
 def distance( v1, v2 ):
   diff = v1 - v2
   return np.dot( diff, diff )**0.5

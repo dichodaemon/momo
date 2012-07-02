@@ -15,49 +15,53 @@ import numpy as np
 import matplotlib.pylab as pl
 import scipy.ndimage as ni
 
-class Track( object ):
-  def __init__( self, observation ):
-    self.__mean = np.array( [0.] * 4 )
-    self.__mean[0:2] = observation
-    self.a = np.array( [
-      [ 1., 0., 1., 0. ],
-      [ 0., 1., 0., 1. ],
-      [ 0., 0., 1., 0. ],
-      [ 0., 0., 0., 1. ]
-    ] )
-    self.c = np.array( [
-      [ 1., 0., 0., 0. ],
-      [ 0., 1., 0., 0. ]
-    ] )
-    self.r = 0.002
-    self.q = np.eye( 2 ) * 1.
-    self.p = np.eye( 4 ) * 1.
-
-  def predict( self, delta ):
-    self.__mean = np.dot( self.a, self.__mean )
-    d3 = delta**3 * self.r / 3.
-    d2 = delta**2 * self.r / 2.
-    d  = delta * self.r
-    r = np.array( [
+class default_noise( object ):
+  def __init__( self, factor ):
+    self.factor = factor
+  def __call__( self, delta ):
+    d3 = delta**3 * self.factor / 3.
+    d2 = delta**2 * self.factor / 2.
+    d  = delta * self.factor
+    return np.array( [
       [d3, 0., d2, 0.],
       [0., d3, 0., d2],
       [d2, 0.,  d,  0],
       [0,  d2,  0,  d]
     ] )
-    self.p = np.dot( np.dot( self.a, self.p ), np.transpose( self.a ) ) + self.r
+
+class Track( object ):
+  a = np.array( [
+    [ 1., 0., 1., 0. ],
+    [ 0., 1., 0., 1. ],
+    [ 0., 0., 1., 0. ],
+    [ 0., 0., 0., 1. ]
+  ] )
+  c = np.array( [
+    [ 1., 0., 0., 0. ],
+    [ 0., 1., 0., 0. ]
+  ] )
+  r = default_noise( 0.0002 )
+  q = np.eye( 2 ) * 0.25
+  p = np.eye( 4 ) * 1.
+
+  def __init__( self, observation ):
+    mean = np.array( [0.] * 4 )
+    mean[0:2] = observation
+    self.filter = momo.tracking.Kalman( 
+      mean, Track.a, Track.c, Track.r, Track.q, Track.p 
+    )
+
+  def predict( self, delta ):
+    self.filter.predict( delta )
 
   def update( self, observation ):
-    tmp = np.dot( np.dot( self.c, self.p ), np.transpose( self.c ) ) + self.q
-    tmp = np.linalg.inv( tmp )
-    k = np.dot( np.dot( self.p, np.transpose( self.c ) ), tmp )
-    self.__mean = self.__mean + np.dot( k, observation - np.dot( self.c, self.__mean ) )
-    self.p = np.dot( np.eye( 4 ) - np.dot( k, self.c ), self.p )
+    self.filter.update( observation )
 
   def get_mean( self ):
-    return self.__mean
+    return self.filter.mean
 
   def set_mean( self, value ):
-    self.__mean = value
+    self.filter.mean = value
 
   mean = property( get_mean, set_mean )
 

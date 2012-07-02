@@ -76,19 +76,23 @@ class Experiment( object ):
           #del x[agent_id]
           #del y[agent_id]
 
-data = read_data( "data/tracker/freiburg-station_filtered.txt" )
+learning_data  = read_data( sys.argv[1] )
+track = int( sys.argv[2] )
+
+last_found = -1
+for momo.frames( 
 
 # Experiment 1
 
 exp1 = Experiment( -5, 30., 0.25, 35, 45, data )
 
-#exp1.add_case( 
-  #momo.cost_functions.weighted_mahalanobis( 
-    #momo.features.bins, data, None
-  #),
-  #"g.",
-  #"bins/maha"
-#)
+exp1.add_case( 
+  momo.cost_functions.mahalanobis( 
+    momo.features.bins, data
+  ),
+  "g.",
+  "bins/maha"
+)
 
 #exp1.add_case( 
   #momo.cost_functions.adaptive_gaussian_mixture( momo.features.real, data, kmax = 25),
