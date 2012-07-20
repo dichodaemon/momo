@@ -15,28 +15,18 @@ import numpy as np
 import matplotlib.pylab as pl
 import scipy.ndimage as ni
 
-def split_line( line ):
-  v = line.split()
-  return [
-    int( v[0] ), float( v[1] ), int( v[2] ), 
-    float( v[3] ), float( v[4] ), float( v[5] ), float( v[6] )
-  ]
-
-def read_data( filename ):
-  f = open( filename )
-  data = [split_line( l ) for l in f]
-  f.close()
-  return data
 
 class Experiment( object ):
-  def __init__( self, grid_x, grid_y, delta, width, height, data ):
+  def __init__( self, grid_x, grid_y, delta, width, height, data, track, destination ):
     self.grid_x = grid_x
     self.grid_y = grid_y
     self.delta  = delta
     self.width  = width
     self.height = height
     self.cases  = []
-    self.data = data
+    self.data   = data
+    self.track  = track
+    self.destination = destination
 
   def add_case( self, cost_function, format_string, legend ):
     self.cases.append( {
@@ -50,7 +40,11 @@ class Experiment( object ):
     y = {}
     x1 = []
     y1 = []
+    count = 0
     for f in momo.frames( self.data ):
+      count += 1
+      if count % 10 != 0:
+        continue
       pl.clf()
       pl.axis( "scaled" )
       pl.xlim( self.grid_x, self.grid_x + self.width )
@@ -66,7 +60,10 @@ class Experiment( object ):
         x[o_id].append( o_x )
         y[o_id].append( o_y )
       for o_id in x.keys():
-        pl.plot( x[o_id], y[o_id], 'r' )
+        if o_id == self.track:
+          pl.plot( x[o_id], y[o_id], 'r' )
+        else:
+          pl.plot( x[o_id], y[o_id], 'b' )
       pl.plot( x1, y1, "ko" )
       #pl.legend()
       pl.draw()
@@ -76,42 +73,52 @@ class Experiment( object ):
           #del x[agent_id]
           #del y[agent_id]
 
-learning_data  = read_data( sys.argv[1] )
-track = int( sys.argv[2] )
+cost_function = momo.cost_functions.__dict__[sys.argv[1]]
+model = sys.argv[2]
+data  = momo.read_data( sys.argv[3] )
 
-last_found = -1
-for momo.frames( 
+if len( sys.argv ) > 4:
+  track = int( sys.argv[4] )
+else:
+  max_count = 0
+  track = -1
+  counts = {}
+  for o in data:
+    if not o[2] in counts:
+      counts[o[2]] = 0
+    counts[o[2]] += 1
+    if counts[o[2]] > max_count:
+      track = o[2]
+      max_count = counts[o[2]]
+
+
+first = -1
+last  = -1
+destination = None
+for o in data:
+  if o[2] == track:
+    if first == -1:
+      first = o[0]
+    last = o[0]
+    destination = o
+
+
+samples = []
+for o in data:
+  if o[0] >= first and o[0] <= last:
+    samples.append( o )
 
 # Experiment 1
 
-exp1 = Experiment( -5, 30., 0.25, 35, 45, data )
+
+exp1 = Experiment( -5, 30., 0.25, 35, 45, samples, track, destination )
 
 exp1.add_case( 
-  momo.cost_functions.mahalanobis( 
-    momo.features.bins, data
-  ),
+  cost_function.load( open( model ) ),
   "g.",
   "bins/maha"
 )
 
-#exp1.add_case( 
-  #momo.cost_functions.adaptive_gaussian_mixture( momo.features.real, data, kmax = 25),
-  #"k.",
-  #"real/ggmm"
-#)
-
-
 pl.figure( 1, figsize = ( 20, 10 ), dpi = 75 )
 pl.ion()
 exp1.animate( ["real/ggmm"] )
-#for i in xrange( len( snapshot ) - 1 ):
-  #min_dist = 1E6
-  #min_j = -1
-  #for j in xrange( 1, len( snapshot ) ):
-    #diff = self.agents[snapshot[i][0]][snapshot[i][1]  - self.agents[snapshot[j][0]][snapshot[j][1]
-    #dist = np.dot( diff, diff )
-    #if dist < min_dist:
-      #min_dist = dist
-      #min_j    = j
-  #self.pairs.append( [snapshot[i], snapshot[j]] )
-

@@ -60,5 +60,5 @@ def compute_features( module, data ):
       f.append( module.compute( tmp ) )
       t = tmp.pop( 0 )
       tmp.append( t )
-  return np.array( random.sample( f, 3000 ) )
+  return np.array( random.sample( f, max( len( f ), 3000 ) ) )
 

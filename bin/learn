@@ -17,10 +17,22 @@ def learn( name, cost_function ):
   cost_function.save( f )
   f.close()
 
-data = momo.read_data( sys.argv[1] )
+
+if not os.path.exists( "models" ):
+  os.makedirs( "models" )
+
+data     = momo.read_data( sys.argv[1] )
+features = momo.features.__dict__[sys.argv[2]] 
+cost_function = momo.cost_functions.__dict__[sys.argv[3]]
+
+output_name = "models/%s_%s_%s.txt" % ( 
+  sys.argv[1].split( "/" )[-1].split( "." )[0], sys.argv[2], sys.argv[3] 
+) 
 
 learn( 
-  "models/%s_maha_bins.txt" % sys.argv[1].split( "." )[0],
-  momo.cost_function.mahalanobis( momo.features.bins, data )
+  output_name,
+  cost_function( features, data )
 )
+
+cf = momo.cost_functions.mahalanobis.load( open( output_name ) )
 
