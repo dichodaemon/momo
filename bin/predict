@@ -94,11 +94,13 @@ else:
 
 first = -1
 last  = -1
+origin = None
 destination = None
 for o in data:
   if o[2] == track:
     if first == -1:
       first = o[0]
+      origin = o
     last = o[0]
     destination = o
 
@@ -111,7 +113,7 @@ for o in data:
 # Experiment 1
 
 
-exp1 = Experiment( -5, 30., 0.25, 35, 45, samples, track, destination )
+exp1 = Experiment( -5, 30., 0.25, 35, 45, samples, track, origin, destination )
 
 exp1.add_case( 
   cost_function.load( open( model ) ),
