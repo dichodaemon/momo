@@ -13,13 +13,12 @@ class mahalanobis( object ):
       self.sigma     = module.covariance( self.mu, features )
       self.inv_sigma = np.linalg.inv( self.sigma )
 
-  def __call__( self, v1, v2 ):
-    value = self.module.compute( v1, v2 )
+  def __call__( self, reference, frame ):
+    value = self.module.compute( reference, frame )
     diff  = self.module.difference( self.mu, value )
     cost  = np.dot( np.dot( diff, self.inv_sigma ), np.transpose( diff ) )**0.5
-    diff  = v2[:2] - v1[:2]
-    decay = 1 
-    return cost * decay
+    return 1.0
+    return cost
 
   def save( self, stream ):
     cPickle.dump( [self.module.__name__, self.mu, self.sigma, self.inv_sigma], stream )

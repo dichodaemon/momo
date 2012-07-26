@@ -17,7 +17,7 @@ import scipy.ndimage as ni
 
 
 class Experiment( object ):
-  def __init__( self, grid_x, grid_y, delta, width, height, data, track, destination ):
+  def __init__( self, grid_x, grid_y, delta, width, height, data, track, origin, destination ):
     self.grid_x = grid_x
     self.grid_y = grid_y
     self.delta  = delta
@@ -26,6 +26,7 @@ class Experiment( object ):
     self.cases  = []
     self.data   = data
     self.track  = track
+    self.origin = origin
     self.destination = destination
 
   def add_case( self, cost_function, format_string, legend ):
@@ -36,6 +37,16 @@ class Experiment( object ):
     } )
 
   def animate( self, quiver = [] ):
+    for case in self.cases:
+      case["planner"] = momo.planning.full_plan( 
+        case["cost_function"],
+        self.grid_x, self.grid_y,
+        self.width, self.height,
+        self.delta
+      )
+      case["path_x"] = []
+      case["path_y"] = []
+      case["current"] = np.array( self.origin ) * 1.
     x = {}
     y = {}
     x1 = []
@@ -43,28 +54,53 @@ class Experiment( object ):
     count = 0
     for f in momo.frames( self.data ):
       count += 1
-      if count % 10 != 0:
+      if count % 5 != 0:
         continue
       pl.clf()
       pl.axis( "scaled" )
       pl.xlim( self.grid_x, self.grid_x + self.width )
       pl.ylim( self.grid_y - self.height, self.grid_y )
       tm = time.time()
+      frame = []
+      track_observed = False
       for o in f:
         o_id = o[2]
         o_x  = o[3]
         o_y  = o[4]
+        o_dx = o[5]
+        o_dy = o[6]
         if not o_id in x:
           x[o_id] = []
           y[o_id] = []
         x[o_id].append( o_x )
         y[o_id].append( o_y )
+        if o_id != self.track:
+          frame.append( np.array( [o_x, o_y, o_dx, o_dy] ) )
+        else:
+          track_observed = True
       for o_id in x.keys():
         if o_id == self.track:
           pl.plot( x[o_id], y[o_id], 'r' )
         else:
-          pl.plot( x[o_id], y[o_id], 'b' )
-      pl.plot( x1, y1, "ko" )
+          pl.plot( x[o_id][-1:], y[o_id][-1:], 'b.', markersize = 10 )
+      if len( x[self.track] ) > 1:
+        d = momo.distance( 
+          np.array( [x[self.track][-2], y[self.track][-2]] ), 
+          np.array( [x[self.track][-1], y[self.track][-1]] ) 
+        )
+        for case in self.cases:
+          if track_observed:
+            p, _x, _y, imx, imy = case["planner"]( self.destination, case["current"][:2], frame, d )
+            pl.quiver( _x, _y, imx, imy, color = case["format_string"][0] )
+            case["current"] = p
+            case["path_x"].append( p[0] )
+            case["path_y"].append( p[1] )
+          pl.plot( case["path_x"], case["path_y"], case["format_string"] )
+          pl.plot( 
+            [case["path_x"][-1], self.destination[0]],
+            [case["path_y"][-1], self.destination[1]],
+            "k"
+          )
       #pl.legend()
       pl.draw()
 
@@ -113,7 +149,7 @@ for o in data:
 # Experiment 1
 
 
-exp1 = Experiment( -5, 30., 0.25, 35, 45, samples, track, origin, destination )
+exp1 = Experiment( -5, 30., 1.5, 35, 45, samples, track, origin[3:], destination[3:] )
 
 exp1.add_case( 
   cost_function.load( open( model ) ),

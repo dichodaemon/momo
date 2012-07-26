@@ -3,7 +3,7 @@ import matplotlib.pylab as pl
 import scipy.ndimage as ni
 
 class full_plan( object ):
-  def __init__( self, cost_function, x, y, height, width, delta ):
+  def __init__( self, cost_function, x, y, width, height, delta ):
     self.cost_function = cost_function
     self.x = x
     self.y = y
@@ -17,7 +17,8 @@ class full_plan( object ):
     for i in xrange( self.grid.shape[0] ):
       x = self.x
       for j in xrange( self.grid.shape[1] ):
-        self.grid[i, j] = self.cost_function( np.array( [x, y] ), frame )
+        reference = np.array( [x, y] )
+        self.grid[i, j] = self.cost_function( reference, frame )
         x += self.delta
       y -= self.delta
 
@@ -40,7 +41,10 @@ class full_plan( object ):
     phi = [ [-1] * self.grid.shape[1] for i in xrange( self.grid.shape[0] )]
     cummulated = self.grid * 0 + 1E6
 
+    print "Goal(1):", goal
+
     goal = [int( ( self.y - goal[1] ) / self.delta ), int( ( goal[0] - self.x ) / self.delta )]
+    print "Goal(2):", goal
     cummulated[goal[0], goal[1]] = 0
 
     queue = [goal[0] * self.grid.shape[1] + goal[1]]
@@ -67,7 +71,7 @@ class full_plan( object ):
     imx = -imx
     return x, y, imx, imy
 
-  def descend_gradient( start, distance, step = 0.05 ):
+  def descend_gradient( self, start, distance, imx, imy, step = 0.05 ):
     point = start * 1.
     while True:
       coords = pl.array( [int( ( point[0] - self.x ) / self.delta ), int( ( self.y - point[1] ) / self.delta ) ] )
@@ -81,10 +85,10 @@ class full_plan( object ):
       distance -= step
     return point
 
-  def __call__( self, current, goal, frame, distance ):
+  def __call__( self, goal, current, frame, distance ):
     self.update_grid( frame )
-    self.compute_policy( goal )
+    cummulated, phi = self.compute_policy( goal )
     x, y, imx, imy = self.compute_gradient( cummulated )
-    next_point = self.descend_gradient( current, step, imx, imy )
-    return next_point
+    next_point = self.descend_gradient( current, distance, imx, imy )
+    return next_point, x, y, imx, imy
 

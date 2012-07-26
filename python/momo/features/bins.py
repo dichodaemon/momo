@@ -6,8 +6,8 @@ from math import *
 
 feature_size = 9
 
-def compute( frame ):
-  f = real.compute( frame )
+def compute( reference, frame ):
+  f = real.compute( reference, frame )
   dist_limits = np.array( [0.6, 0.8, 1.0, 1.2, 1.4, 1.6] )
   f_dist = 1.0 * (dist_limits > f[0] )
 

@@ -5,20 +5,19 @@ from math import *
 
 feature_size = 2
 
-def compute( frame ):
-  if len( frame ) == 2:
-    p1, p2 = frame
+def compute( reference, frame ):
+  if len( frame ) == 1:
+    nearest = frame[0]
   else:
-    p1 = frame[0]
     min_dist = 1E6
-    p2 = None
+    nearest = None
     for p in frame[1:]:
-      dist = distance( p1[:2], p[:2] )
+      dist = distance( reference[:2], p[:2] )
       if dist < min_dist:
         min_dist = dist
-        p2 = p
-  alpha = angle.as_vector( p1[:2] - p2[:2] )
-  theta = p2[2:]
+        nearest = p
+  alpha = angle.as_vector( reference[:2] - nearest[:2] )
+  theta = nearest[2:]
   beta  = angle.difference( alpha, theta )
   return np.hstack( [min_dist, beta] )
 
