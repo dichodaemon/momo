@@ -18,9 +18,10 @@ class adaptive_gaussian_mixture_model( object ):
     self.inv_sigma = []
     self.prior = np.array( [ 1.0 / kmax ] * kmax )
 
-    weights = np.array( [1.0] * len( data ) )
-    mu = self.module.mean( data, weights )
-    cov = self.module.covariance( mu, data, weights )
+    l = min( len( data ), 3000 )
+    weights = np.array( [1.0] * l )
+    mu = self.module.mean( data[:l], weights )
+    cov = self.module.covariance( mu, data[:l], weights )
     cov = 0.1 * np.average( np.diag( cov ) ) * np.eye( dim )
     for i in xrange( kmax ):
       self.sigma.append( 1 * cov )
@@ -110,7 +111,6 @@ class adaptive_gaussian_mixture_model( object ):
       while True:
         # Sequentially update all Gaussians
         for m in xrange( kmax ):
-          print k, m
           if self.prior[m] > 0:
             w_expectation = self.compute_w_expectation( expectation, self.prior )
             n_expectation = self.normalize_expectation( w_expectation )
@@ -137,7 +137,8 @@ class adaptive_gaussian_mixture_model( object ):
         log_like = self.log_likelihood( k, w_expectation )
         cost = self.cost( w_expectation, N, k, self.prior )
         print k, m, cost, log_like
-        if abs( ( log_like - old_log_like ) / old_log_like ) < epsilon:
+        if abs( ( log_like - old_log_like ) / old_log_like ) < epsilon or\
+           log_like < old_log_like:
           break
 
       k = np.sum( ( self.prior > 0 ) )
@@ -157,6 +158,7 @@ class adaptive_gaussian_mixture_model( object ):
             min_idx = m
         self.prior[min_idx] = 0
         k = np.sum( ( self.prior > 0 ) )
+        print "New k=", k
 
         # Update expectation
         self.prior = self.prior / np.sum( self.prior )

@@ -57,8 +57,8 @@ def compute_features( module, data ):
     for o_frame, o_time, o_id, o_x, o_y, o_dx, o_dy in frame:
       tmp.append( np.array( [o_x, o_y, o_dx, o_dy] ) )
     for i in xrange( len( frame ) ):
-      f.append( module.compute( tmp ) )
       t = tmp.pop( 0 )
+      f.append( module.compute( t, tmp ) )
       tmp.append( t )
-  return np.array( random.sample( f, max( len( f ), 3000 ) ) )
+  return np.array( f )
 

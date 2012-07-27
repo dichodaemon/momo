@@ -44,6 +44,6 @@ def covariance( mean, features, weights = None ):
     return np.dot( np.transpose( diff ) * 1.0 / features.shape[0], diff )
   else:
     p    = weights / np.sum( weights )
-    return np.dot( np.transpose( diff ) * np.tile( p, (3, 1 ) ), diff )
+    return np.dot( np.transpose( diff ) * np.tile( p, (2, 1 ) ), diff )
 
 

@@ -17,7 +17,6 @@ class mahalanobis( object ):
     value = self.module.compute( reference, frame )
     diff  = self.module.difference( self.mu, value )
     cost  = np.dot( np.dot( diff, self.inv_sigma ), np.transpose( diff ) )**0.5
-    return 1.0
     return cost
 
   def save( self, stream ):

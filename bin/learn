@@ -31,8 +31,8 @@ output_name = "models/%s_%s_%s.txt" % (
 
 learn( 
   output_name,
-  cost_function( features, data )
+  cost_function( features, data[:3000] )
 )
 
-cf = momo.cost_functions.mahalanobis.load( open( output_name ) )
+cf = cost_function.load( open( output_name ) )
 
