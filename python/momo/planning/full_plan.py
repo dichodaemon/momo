@@ -17,7 +17,7 @@ class full_plan( object ):
     for i in xrange( self.grid.shape[0] ):
       x = self.x
       for j in xrange( self.grid.shape[1] ):
-        reference = np.array( [x, y] )
+        reference = np.array( [x, y, 0.1, 0] )
         self.grid[i, j] = self.cost_function( reference, frame )
         x += self.delta
       y -= self.delta

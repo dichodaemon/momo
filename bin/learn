@@ -9,7 +9,31 @@ path     = os.path.abspath( os.path.join( BASE_DIR, "python" ) )
 sys.path.append( path )
 
 import momo
+import random
 import numpy as np
+import matplotlib.pylab as pl
+import scipy.ndimage as ni
+
+def display_cost( module, cost_function, pixel_size = 100, image_size = 10 ):
+  cost_map = np.zeros( ( pixel_size, pixel_size ) )
+  delta = 1.0 * image_size / pixel_size
+  side = image_size / 2.0
+  update_grid( 
+    cost_function, -side, side, delta, 
+    np.array([0., 0, 1., 0.]) , cost_map 
+  )
+  pl.imshow( cost_map, pl.cm.jet, None, None, "none", extent = (-side, side, -side, side ) )
+
+def update_grid( cost_function, grid_x, grid_y, delta, agent, grid ):
+  y = grid_y
+  for i in xrange( grid.shape[0] ):
+    x = grid_x
+    for j in xrange( grid.shape[1] ):
+      grid[i, j] = cost_function( agent, [np.array( [x, y, 1., 0.] )] )
+      x += delta
+    y -= delta
+
+random.seed( 0 )
 
 
 def learn( name, cost_function ):
@@ -31,8 +55,12 @@ output_name = "models/%s_%s_%s.txt" % (
 
 learn( 
   output_name,
-  cost_function( features, data[:3000] )
+  #cost_function( features, data[:10000] )#, 10 )
+  cost_function( features, data )
 )
 
 cf = cost_function.load( open( output_name ) )
 
+#pl.figure( 1, figsize = ( 10, 10 ), dpi = 75 )
+#display_cost( features, cf, 100, 20 )
+#pl.show()

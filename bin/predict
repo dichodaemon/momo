@@ -149,7 +149,7 @@ for o in data:
 # Experiment 1
 
 
-exp1 = Experiment( -5, 30., 0.5, 35, 45, samples, track, origin[3:], destination[3:] )
+exp1 = Experiment( -5, 30., 4.5, 35, 45, samples, track, origin[3:], destination[3:] )
 
 cf = cost_function.load( open( model ) )
 

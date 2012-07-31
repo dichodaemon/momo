@@ -83,22 +83,30 @@ def filter_data( data ):
   tracks = {}
   old_timestamp = None
   delta = 0
+  tmp = {}
   for o in data:
     frame, timestamp, o_id, x, y  = o
     if timestamp != old_timestamp:
       if old_timestamp != None:
         delta = timestamp - old_timestamp
       old_timestamp = timestamp
-      for t in tracks.values():
+      for k, t in tracks.items():
         t.predict( delta )
+        tmp[k].append( [frame, timestamp, k, 1.0 * t.mean] )
     if o_id in tracks:
       tracks[o_id].update( np.array( [x, y] ) )
+      tmp[o_id][-1] = [frame, timestamp, o_id, 1.0 * tracks[o_id].mean]
     else:
       tracks[o_id] = Track( np.array( [x, y] ) )
-    result.append( [frame, timestamp, o_id, 1.0 * tracks[o_id].mean] )
+      tmp[o_id] = [ [frame, timestamp, o_id, 1.0 * tracks[o_id].mean] ]
+    result.extend( tmp[o_id] )
+    tmp[o_id] = []
+
   return result
 
 data = filter_data( read_data( sys.argv[1] ) )
+
+data.sort( key = lambda x : x[0] )
 
 for d in data:
   print d[0], d[1], d[2], d[3][0], d[3][1], d[3][2], d[3][3]
