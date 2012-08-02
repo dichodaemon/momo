@@ -10,14 +10,14 @@ class full_plan( object ):
     self.height = height
     self.width = width
     self.delta = delta
-    self.grid = np.zeros( ( self.height / self.delta, self.width / self.delta ) )
+    self.grid = np.zeros( ( self.height / self.delta + 1, self.width / self.delta + 1 ) )
 
-  def update_grid( self, frame ):
+  def update_grid( self, orientation, frame ):
     y = self.y
     for i in xrange( self.grid.shape[0] ):
       x = self.x
       for j in xrange( self.grid.shape[1] ):
-        reference = np.array( [x, y, 0.1, 0] )
+        reference = np.array( [x, y, orientation[0], orientation[1]] )
         self.grid[i, j] = self.cost_function( reference, frame )
         x += self.delta
       y -= self.delta
@@ -86,9 +86,10 @@ class full_plan( object ):
     return point
 
   def __call__( self, goal, current, frame, distance ):
-    self.update_grid( frame )
+    self.update_grid( current[2:], frame )
     cummulated, phi = self.compute_policy( goal )
     x, y, imx, imy = self.compute_gradient( cummulated )
-    next_point = self.descend_gradient( current, distance, imx, imy )
-    return next_point, x, y, imx, imy
+    next_point = self.descend_gradient( current[:2], distance, imx, imy )
+    diff = next_point - current[:2] 
+    return np.array( [next_point[0], next_point[1], diff[0], diff[1]] ), x, y, imx, imy
 

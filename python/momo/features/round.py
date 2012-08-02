@@ -1,25 +1,34 @@
 from momo import *
+from default import *
 
 import numpy as np
 from math import *
 
-feature_size = 5
+feature_size = 15
+angles    = [0, pi / 4, 3 * pi / 4, -pi / 4, -3 * pi / 4]
+#feature_size = 24
+#angles = [0, pi]
+#for i in xrange( 1, 4 ):
+  #angles.append( pi * i * 0.25 )
+  #angles.append( - pi * i * 0.25 )
+n = len( angles )
 
 def compute( reference, frame ):
-  angles    = [0, pi / 4, 3 * pi / 4, -pi / 4, -3 * pi / 4]
-  distances = [1., 2., 4., 100.]
-  result = np.array( [0.] * len( angles ) )
+  result = np.array( [0.] * n * 3 )
   r_angle = angle.as_angle( reference[2:] )
+  #print "-" * 80
+  #print reference
+  #print frame
   for o in frame:
     o_angle = angle.as_angle( o[:2] - reference[:2] )
     t_angle = angle.difference( r_angle, o_angle )
+    v_angle = angle.rotate( o[2:], -r_angle )
     t_distance = distance( o[:2], reference[:2] )
-    print "-" * 80
-    print reference, o
-    print r_angle
-    print o_angle
-    print t_angle
-    print t_distance
+    #print reference, o
+    #print r_angle
+    #print o_angle
+    #print t_angle
+    #print t_distance
     if t_distance > 10:
       t_distance = 10
     f2 = 0
@@ -29,30 +38,15 @@ def compute( reference, frame ):
       if ang < min_angle:
         f2 = i
         min_angle = ang
-    print angles[f2]
-    if t_distance < result[f2] or result[f2] == 0:
+    #print angles[f2]
+    if t_distance < result[f2] or result[f2] <= 0:
+      #print "o", f2, t_distance, o
       result[f2] = t_distance
+      result[n + f2] = v_angle[0]
+      result[n * 2 + f2] = v_angle[1]
+  #print result
+  for i in xrange( n ):
+    if result[i] <= 0:
+      result[i] = 5.
   return result
-
-def mean( features, weights = None ):  
-  if weights == None:
-    mu = sum( features * 1.0 / features.shape[0] )
-  else:
-    p    = weights / np.sum( weights )
-    mu = sum( features * np.transpose( np.tile( p, (features.shape[1], 1) ) ) )
-  return mu
-
-def difference( v1, v2 ):
-  return v2 - v1
-
-def covariance( mean, features, weights = None ):
-  diff = np.zeros( ( features.shape[0], feature_size ) )
-  for i in xrange( features.shape[0] ):
-    diff[i] = difference( mean, features[i] )
-  if weights == None:
-    return np.dot( np.transpose( diff ) * 1.0 / features.shape[0], diff )
-  else:
-    p    = weights / np.sum( weights )
-    return np.dot( np.transpose( diff ) * np.tile( p, (features.shape[1], 1 ) ), diff )
-
 

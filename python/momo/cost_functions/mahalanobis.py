@@ -8,7 +8,6 @@ class mahalanobis( object ):
     self.module = module
     if data != None:
       features = momo.compute_features( module, data )
-
       self.mu = module.mean( features )
       self.sigma     = module.covariance( self.mu, features )
       self.inv_sigma = np.linalg.inv( self.sigma )

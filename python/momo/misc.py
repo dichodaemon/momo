@@ -48,7 +48,7 @@ def frames( data ):
     else:
       yield( snapshot )
       frame = n_frame
-      snapshot = []
+      snapshot = [d]
 
 def compute_features( module, data ):
   f = []
@@ -57,7 +57,12 @@ def compute_features( module, data ):
     for o_frame, o_time, o_id, o_x, o_y, o_dx, o_dy in frame:
       tmp.append( np.array( [o_x, o_y, o_dx, o_dy] ) )
     for i in xrange( len( frame ) ):
+      #print "-" * 80
+      #print tmp
       t = tmp.pop( 0 )
+      #print t
+      #print tmp
+      #print "-" * 80
       f.append( module.compute( t, tmp ) )
       tmp.append( t )
   return np.array( f )

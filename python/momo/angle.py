@@ -26,3 +26,7 @@ def difference( angle1, angle2 ):
     angle = -np.sign( angle ) * ( 2 * pi - abs( angle ) )
   return angle
 
+def rotate( v, angle ):
+  x = v[0] * cos( angle ) - v[1] * sin( angle )
+  y = v[0] * sin( angle ) + v[1] * cos( angle )
+  return np.array( [x, y] )

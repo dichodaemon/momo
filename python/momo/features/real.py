@@ -8,6 +8,7 @@ feature_size = 2
 def compute( reference, frame ):
   if len( frame ) == 1:
     nearest = frame[0]
+    min_dist = distance( reference[:2], nearest[:2] )
   else:
     min_dist = 1E6
     nearest = None

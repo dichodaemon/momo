@@ -29,7 +29,7 @@ def update_grid( cost_function, grid_x, grid_y, delta, agent, grid ):
   for i in xrange( grid.shape[0] ):
     x = grid_x
     for j in xrange( grid.shape[1] ):
-      grid[i, j] = cost_function( agent, [np.array( [x, y, 1., 0.] )] )
+      grid[i, j] = cost_function( agent, [np.array( [x, y, -1., 0.] )] )
       x += delta
     y -= delta
 
@@ -61,6 +61,8 @@ learn(
 
 cf = cost_function.load( open( output_name ) )
 
-#pl.figure( 1, figsize = ( 10, 10 ), dpi = 75 )
-#display_cost( features, cf, 100, 20 )
-#pl.show()
+print cf.mu
+
+pl.figure( 1, figsize = ( 10, 10 ), dpi = 75 )
+display_cost( features, cf, 100, 20 )
+pl.show()

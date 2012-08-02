@@ -1,0 +1,61 @@
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sys
+import os
+
+BASE_DIR = os.path.abspath( os.path.join( os.path.dirname( __file__ ), ".." ) )
+path     = os.path.abspath( os.path.join( BASE_DIR, "python" ) )
+sys.path.append( path )
+
+import time
+import momo
+import momo.planning
+import numpy as np
+import matplotlib.pylab as pl
+import scipy.ndimage as ni
+
+
+def animate( x1, y1, width, height, data ):
+  ends = {}
+  for d in data:
+    ends[d[2]] = d[0] 
+  x = {}
+  y = {}
+  count = 0
+  for f in momo.frames( data ):
+    pl.clf()
+    pl.axis( "scaled" )
+    pl.xlim( x1, x1 + width )
+    pl.ylim( y1 - height, y1 )
+    frame = []
+    for o in f:
+      o_id = o[2]
+      o_x  = o[3]
+      o_y  = o[4]
+      o_dx = o[5]
+      o_dy = o[6]
+      if not o_id in x:
+        x[o_id] = []
+        y[o_id] = []
+      x[o_id].append( o_x )
+      y[o_id].append( o_y )
+    for o_id in x.keys():
+      pl.plot( x[o_id], y[o_id], 'b.', markersize = 10 )
+      if o[0] == ends[o_id]:
+        del x[o_id]
+        del y[o_id]
+    pl.draw()
+
+data  = momo.read_data( sys.argv[1] )
+
+
+minx = min( data, key = lambda x: x[3] )[3]
+maxx = max( data, key = lambda x: x[3] )[3]
+miny = min( data, key = lambda y: y[4] )[4]
+maxy = max( data, key = lambda y: y[4] )[4]
+
+
+pl.figure( 1, figsize = ( 20, 10 ), dpi = 75 )
+pl.ion()
+animate( minx, maxy, maxx - minx, maxy - miny, data )

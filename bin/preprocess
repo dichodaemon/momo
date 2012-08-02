@@ -68,7 +68,7 @@ class Track( object ):
 def split_line( line ):
   v = line.split()
   return [
-    int( v[0] ), float( v[1] ), int( v[2] ), 
+    int( float( v[0] ) ), float( v[1] ), int( float( v[2] ) ), 
     float( v[3] ), float( v[4] )
   ]
 

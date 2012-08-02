@@ -54,7 +54,7 @@ class Experiment( object ):
     count = 0
     for f in momo.frames( self.data ):
       count += 1
-      if count % 5 != 0:
+      if count % 1 != 0:
         continue
       pl.clf()
       pl.axis( "scaled" )
@@ -90,7 +90,8 @@ class Experiment( object ):
         )
         for case in self.cases:
           if track_observed:
-            p, _x, _y, imx, imy = case["planner"]( self.destination, case["current"][:2], frame, d )
+            p, _x, _y, imx, imy = case["planner"]( self.destination, case["current"], frame, d )
+            pl.imshow( case["planner"].grid, pl.cm.jet, None, None, "none", extent = (self.grid_x, self.grid_x +self.width, self.grid_y - self.height, self.grid_y ) )
             pl.quiver( _x, _y, imx, imy, color = case["format_string"][0] )
             case["current"] = p
             case["path_x"].append( p[0] )
@@ -140,6 +141,12 @@ for o in data:
     last = o[0]
     destination = o
 
+origin = origin[:]
+destination = destination[:]
+origin[3] = -10.
+origin[4] = -2
+destination[3] = 10
+destination[4] = -3
 
 samples = []
 for o in data:
@@ -148,8 +155,12 @@ for o in data:
 
 # Experiment 1
 
+minx = min( data, key = lambda x: x[3] )[3]
+maxx = max( data, key = lambda x: x[3] )[3]
+miny = min( data, key = lambda y: y[4] )[4]
+maxy = max( data, key = lambda y: y[4] )[4]
 
-exp1 = Experiment( -5, 30., 4.5, 35, 45, samples, track, origin[3:], destination[3:] )
+exp1 = Experiment( minx, maxy, .5, maxx - minx, maxy - miny, samples, track, origin[3:], destination[3:] )
 
 cf = cost_function.load( open( model ) )
 
