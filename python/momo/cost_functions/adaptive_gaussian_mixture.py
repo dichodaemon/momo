@@ -22,26 +22,23 @@ class adaptive_gaussian_mixture( object ):
       for i in xrange( self.k ):
         det   = np.linalg.det( self.sigma[i] )
         norm  = ( 2 * pi )**( -dim * 0.5 ) * det**( -0.5 )
-        self.norm.append( norm )
+        self.norm.append( log( self.prior[i] ) + log( norm ) )
+        #self.norm.append( self.prior[i] * norm )
       print "%i clusters" % self.k
 
-  def __call__( self, reference, frame ):
-    value = self.module.compute( reference, frame )
+  def __call__( self, s1, s2, frame ):
+    value = self.module.compute( s1, s2, frame )
     z     = 0.0
     result = 0
 
     for ki in xrange( self.k ):
       diff  = self.module.difference( self.mu[ki], value )
       maha  = np.dot( np.dot( diff, self.inv_sigma[ki] ), np.transpose( diff ) )
-      proba = self.prior[ki] * self.norm[ki] * exp( -0.5 * maha )
-      z += proba
-      #result += proba * maha**0.5
-      #result += proba
-      result +=  self.prior[ki] * maha**0.5
-    #return (-log( result ) )**0.5
-    #return result / z
-    return result
-    #return (-log( result ) )**0.5
+      #proba = self.prior[ki] * self.norm[ki] * exp( -0.5 * maha )
+      z -= self.norm[ki] - 0.5 * maha
+      #result +=  self.prior[ki] * maha**0.5
+      #result +=  self.norm[ki] * exp( -0.5 * maha )
+    return z**0.5
 
   def save( self, stream ):
     cPickle.dump( [

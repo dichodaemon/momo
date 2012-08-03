@@ -10,17 +10,34 @@ class full_plan( object ):
     self.height = height
     self.width = width
     self.delta = delta
-    self.grid = np.zeros( ( self.height / self.delta + 1, self.width / self.delta + 1 ) )
+    self.directions = [
+      np.array( [-1., -1.] ),
+      np.array( [-1., 0.] ),
+      np.array( [-1., 1.] ),
+      np.array( [0., -1.] ),
+      np.array( [0., 0.] ),
+      np.array( [0., 1.] ), 
+      np.array( [1., -1.] ),
+      np.array( [1., 0.] ),
+      np.array( [1., 1.] )
+    ]
+    self.grid = np.zeros( ( self.height / self.delta + 1, self.width / self.delta + 1, len( self.directions ) ) )
+
+  def index( self, dx, dy ):
+    dx += 1
+    dy += 1
+    return dx * 3 + dy
 
   def update_grid( self, orientation, frame ):
-    y = self.y
-    for i in xrange( self.grid.shape[0] ):
-      x = self.x
-      for j in xrange( self.grid.shape[1] ):
-        reference = np.array( [x, y, orientation[0], orientation[1]] )
-        self.grid[i, j] = self.cost_function( reference, frame )
-        x += self.delta
-      y -= self.delta
+    for a in xrange( self.grid.shape[2] ):
+      y = self.y
+      for i in xrange( self.grid.shape[0] ):
+        x = self.x
+        for j in xrange( self.grid.shape[1] ):
+          reference = np.array( [x, y, self.directions[a][0], self.directions[a][1]] )
+          self.grid[i, j, a] = self.cost_function( reference, reference, frame )
+          x += self.delta
+        y -= self.delta
 
   def neighbors( self, cummulated, phi, point ):
     for i in xrange( point[0] - 1, point[0] + 2 ):
@@ -31,7 +48,9 @@ class full_plan( object ):
             di = i - point[0]
             dj = j - point[1]
             d = ( di**2 + dj**2 )**0.5
-            cost = cummulated[point[0], point[1]] + d * self.grid[i, j] 
+            dx = i - point[0]
+            dy = j - point[1]
+            cost = cummulated[point[0], point[1]] + d * self.grid[i, j, self.index( dx, dy )] 
             if cost < cummulated[i, j]:
               cummulated[i, j] = cost
               phi[i][j] = point 
@@ -39,7 +58,7 @@ class full_plan( object ):
 
   def compute_policy( self, goal ):
     phi = [ [-1] * self.grid.shape[1] for i in xrange( self.grid.shape[0] )]
-    cummulated = self.grid * 0 + 1E6
+    cummulated = np.zeros( ( self.grid.shape[0], self.grid.shape[1] ) ) + 1E6
 
     print "Goal(1):", goal
 

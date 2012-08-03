@@ -1,0 +1,49 @@
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sys
+import os
+
+BASE_DIR = os.path.abspath( os.path.join( os.path.dirname( __file__ ), ".." ) )
+path     = os.path.abspath( os.path.join( BASE_DIR, "python" ) )
+sys.path.append( path )
+
+import momo
+import numpy as np
+import matplotlib.pylab as pl
+import scipy.ndimage as ni
+
+def display_cost( cost_function, pixel_size = 100, image_size = 10 ):
+  cost_map = np.zeros( ( pixel_size, pixel_size ) )
+  delta = 1.0 * image_size / pixel_size
+  side = image_size / 2.0
+  update_grid( 
+    cost_function, -side, side, delta, 
+    np.array([0., 0, 0, 0.]) , cost_map 
+  )
+  pl.imshow( cost_map, pl.cm.jet, None, None, "none", extent = (-side, side, -side, side ) )
+
+def update_grid( cost_function, grid_x, grid_y, delta, agent, grid ):
+  y = grid_y
+  for i in xrange( grid.shape[0] ):
+    x = grid_x
+    for j in xrange( grid.shape[1] ):
+      angle = np.array( [y, x] )
+      angle /= np.dot( angle, angle ) ** 0.5
+      if i > grid.shape[0] / 2:
+        angle = [1., 0.]
+      else:
+        angle = [0.1, 0.]
+      grid[i, j] = cost_function( agent, agent, [np.array( [x, y, angle[0], angle[1]] )] )
+      x += delta
+    y -= delta
+
+cost_function = momo.cost_functions.__dict__[sys.argv[3]]
+start_path = "data/models/%s/%s" % ( sys.argv[2], sys.argv[3] )
+output_name = "%s/%s.txt" % ( start_path, sys.argv[1] )
+
+cf = cost_function.load( open( output_name ) )
+
+pl.figure( 1, figsize = ( 10, 10 ), dpi = 75 )
+display_cost( cf, 200, 20 )
+pl.show()

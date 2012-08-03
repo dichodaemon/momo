@@ -5,18 +5,18 @@ from math import *
 
 feature_size = 4
 
-def compute( reference, frame ):
+def compute( s1, s2, frame ):
   if len( frame ) == 1:
     nearest = frame[0]
   else:
     min_dist = 1E6
     nearest = None
     for p in frame[1:]:
-      dist = distance( reference[:2], p[:2] )
+      dist = distance( s2[:2], p[:2] )
       if dist < min_dist:
         min_dist = dist
         nearest = p
-  result = nearest - reference
+  result = nearest - s2
   return result
 
 def mean( features, weights = None ):  

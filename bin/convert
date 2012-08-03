@@ -27,8 +27,8 @@ def read_data( filename ):
   return data
 
 
-if not os.path.exists( "data/filtered" ):
-  os.makedirs( "data/filtered" )
+if not os.path.exists( "data/tracks" ):
+  os.makedirs( "data/tracks" )
 
 data = []
 for filename in glob.glob( os.path.join( sys.argv[2], "*.label_real" ) ):
@@ -43,7 +43,7 @@ for d in data:
     last = d[0]
   d[0] = frame
 
-f = open( "data/filtered/%s.txt" % sys.argv[1], "w" )
+f = open( "data/tracks/%s.txt" % sys.argv[1], "w" )
 for d in data:
   f.write( "%i %f %i %f %f\n" %  tuple( d ) )
 f.close()

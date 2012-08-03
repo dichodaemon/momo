@@ -30,3 +30,11 @@ def rotate( v, angle ):
   x = v[0] * cos( angle ) - v[1] * sin( angle )
   y = v[0] * sin( angle ) + v[1] * cos( angle )
   return np.array( [x, y] )
+
+if __name__ == "__main__":
+  angle1 = np.array( [1., 0] )
+  for i in xrange( 360 ):
+    angle  =  i * 2 * pi / 300
+    angle2 = np.array( [cos( angle ), sin( angle )] )
+    print angle, angle2, difference( angle1, angle2 )
+

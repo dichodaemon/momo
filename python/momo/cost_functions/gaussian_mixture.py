@@ -4,7 +4,7 @@ from math import *
 import random
 
 class gaussian_mixture( object ):
-  def __init__( self, module, p1, p2, k ):
+  def __init__( self, module, data ):
     self.k      = k
     self.module = module
 

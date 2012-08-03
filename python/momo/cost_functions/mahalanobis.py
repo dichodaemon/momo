@@ -12,8 +12,8 @@ class mahalanobis( object ):
       self.sigma     = module.covariance( self.mu, features )
       self.inv_sigma = np.linalg.inv( self.sigma )
 
-  def __call__( self, reference, frame ):
-    value = self.module.compute( reference, frame )
+  def __call__( self, s1, s2, frame ):
+    value = self.module.compute( s1, s2, frame )
     diff  = self.module.difference( self.mu, value )
     cost  = np.dot( np.dot( diff, self.inv_sigma ), np.transpose( diff ) )**0.5
     return cost

@@ -47,7 +47,7 @@ def animate( x1, y1, width, height, data ):
         del y[o_id]
     pl.draw()
 
-data  = momo.read_data( sys.argv[1] )
+data     = momo.read_data( "data/filtered/%s.txt" % sys.argv[1] )
 
 
 minx = min( data, key = lambda x: x[3] )[3]

@@ -13,18 +13,18 @@ angles    = [0, pi / 4, 3 * pi / 4, -pi / 4, -3 * pi / 4]
   #angles.append( - pi * i * 0.25 )
 n = len( angles )
 
-def compute( reference, frame ):
+def compute( s1, s2, frame ):
   result = np.array( [0.] * n * 3 )
-  r_angle = angle.as_angle( reference[2:] )
+  r_angle = angle.as_angle( s2[2:] )
   #print "-" * 80
-  #print reference
+  #print s2
   #print frame
   for o in frame:
-    o_angle = angle.as_angle( o[:2] - reference[:2] )
+    o_angle = angle.as_angle( o[:2] - s2[:2] )
     t_angle = angle.difference( r_angle, o_angle )
     v_angle = angle.rotate( o[2:], -r_angle )
-    t_distance = distance( o[:2], reference[:2] )
-    #print reference, o
+    t_distance = distance( o[:2], s2[:2] )
+    #print s2, o
     #print r_angle
     #print o_angle
     #print t_angle

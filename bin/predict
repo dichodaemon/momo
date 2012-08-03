@@ -91,8 +91,8 @@ class Experiment( object ):
         for case in self.cases:
           if track_observed:
             p, _x, _y, imx, imy = case["planner"]( self.destination, case["current"], frame, d )
-            pl.imshow( case["planner"].grid, pl.cm.jet, None, None, "none", extent = (self.grid_x, self.grid_x +self.width, self.grid_y - self.height, self.grid_y ) )
-            pl.quiver( _x, _y, imx, imy, color = case["format_string"][0] )
+            #pl.imshow( case["planner"].grid[:, :, 4], pl.cm.jet, None, None, "none", extent = (self.grid_x, self.grid_x +self.width, self.grid_y - self.height, self.grid_y ) )
+            #pl.quiver( _x, _y, imx, imy, color = case["format_string"][0] )
             case["current"] = p
             case["path_x"].append( p[0] )
             case["path_y"].append( p[1] )
@@ -110,9 +110,12 @@ class Experiment( object ):
           #del x[agent_id]
           #del y[agent_id]
 
-cost_function = momo.cost_functions.__dict__[sys.argv[1]]
-model = sys.argv[2]
-data  = momo.read_data( sys.argv[3] )
+data     = momo.read_data( "data/filtered/%s.txt" % sys.argv[1] )
+cost_function = momo.cost_functions.__dict__[sys.argv[3]]
+start_path = "data/models/%s/%s" % ( sys.argv[2], sys.argv[3] )
+output_name = "%s/%s.txt" % ( start_path, sys.argv[1] )
+
+cost_function = cost_function.load( open( output_name ) )
 
 if len( sys.argv ) > 4:
   track = int( sys.argv[4] )
@@ -162,12 +165,10 @@ maxy = max( data, key = lambda y: y[4] )[4]
 
 exp1 = Experiment( minx, maxy, .5, maxx - minx, maxy - miny, samples, track, origin[3:], destination[3:] )
 
-cf = cost_function.load( open( model ) )
-
 exp1.add_case( 
-  cf,
+  cost_function,
   "g.",
-  "%s/%s" % ( cost_function.__name__, cf.module.__name__ )
+  "%s/%s" % ( sys.argv[2], sys.argv[3] )
 )
 
 pl.figure( 1, figsize = ( 20, 10 ), dpi = 75 )
