@@ -5,3 +5,4 @@ import clustering
 import cost_functions
 import tracking
 import planning
+import irl

@@ -91,8 +91,8 @@ class Experiment( object ):
         for case in self.cases:
           if track_observed:
             p, _x, _y, imx, imy = case["planner"]( self.destination, case["current"], frame, d )
-            #pl.imshow( case["planner"].grid[:, :, 4], pl.cm.jet, None, None, "none", extent = (self.grid_x, self.grid_x +self.width, self.grid_y - self.height, self.grid_y ) )
-            #pl.quiver( _x, _y, imx, imy, color = case["format_string"][0] )
+            pl.imshow( case["planner"].grid[:, :, 3], pl.cm.jet, None, None, "none", extent = (self.grid_x, self.grid_x +self.width, self.grid_y - self.height, self.grid_y ) )
+            pl.quiver( _x, _y, imx, imy, color = case["format_string"][0] )
             case["current"] = p
             case["path_x"].append( p[0] )
             case["path_y"].append( p[1] )
@@ -146,10 +146,11 @@ for o in data:
 
 origin = origin[:]
 destination = destination[:]
-origin[3] = -10.
-origin[4] = -2
-destination[3] = 10
-destination[4] = -3
+first = 100
+origin[3] = 10.85
+origin[4] = 0.78
+destination[3] = -6.28
+destination[4] = 3.64
 
 samples = []
 for o in data:
@@ -158,12 +159,12 @@ for o in data:
 
 # Experiment 1
 
-minx = min( data, key = lambda x: x[3] )[3]
-maxx = max( data, key = lambda x: x[3] )[3]
-miny = min( data, key = lambda y: y[4] )[4]
-maxy = max( data, key = lambda y: y[4] )[4]
+minx = min( data, key = lambda x: x[3] )[3] - 2
+maxx = max( data, key = lambda x: x[3] )[3] + 2
+miny = min( data, key = lambda y: y[4] )[4] - 2
+maxy = max( data, key = lambda y: y[4] )[4] + 2
 
-exp1 = Experiment( minx, maxy, .5, maxx - minx, maxy - miny, samples, track, origin[3:], destination[3:] )
+exp1 = Experiment( minx, maxy, 0.5, maxx - minx, maxy - miny, samples, track, origin[3:], destination[3:] )
 
 exp1.add_case( 
   cost_function,

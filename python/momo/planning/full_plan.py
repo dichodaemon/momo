@@ -35,7 +35,10 @@ class full_plan( object ):
         x = self.x
         for j in xrange( self.grid.shape[1] ):
           reference = np.array( [x, y, self.directions[a][0], self.directions[a][1]] )
-          self.grid[i, j, a] = self.cost_function( reference, reference, frame )
+          if x > -5 and y > 3.7:
+            self.grid[i, j, a] = 20
+          else:
+            self.grid[i, j, a] = self.cost_function( reference, reference, frame )
           x += self.delta
         y -= self.delta
 
@@ -48,9 +51,7 @@ class full_plan( object ):
             di = i - point[0]
             dj = j - point[1]
             d = ( di**2 + dj**2 )**0.5
-            dx = i - point[0]
-            dy = j - point[1]
-            cost = cummulated[point[0], point[1]] + d * self.grid[i, j, self.index( dx, dy )] 
+            cost = cummulated[point[0], point[1]] + d * self.grid[i, j, self.index( di, dj )] 
             if cost < cummulated[i, j]:
               cummulated[i, j] = cost
               phi[i][j] = point 
