@@ -13,7 +13,7 @@ def value_iteration( mdp ):
     #print "q_max", q_max
     #print "q_new", q_new
     #print "policy", policy
-    if np.linalg.norm( q_new - q, 2 ) < 1E-5:
+    if np.linalg.norm( q_new - q, 2 ) < 1E-10:
       done = True
     q = q_new
   return q, np.argmax( policy, 1 )
@@ -37,10 +37,10 @@ if __name__ == "__main__":
     [ 0., 0., 0., 0., 0.],
     [ 0., 0., 0., 0., 0.],
     [ 0., 0., 0., 0., 0.],
-    [ 0., 0., 1., 0., 0.],
     [ 0., 0., 0., 0., 0.],
     [ 0., 0., 0., 0., 0.],
-    [ 0., 1., 0., 0., 0.],
+    [ 0., 0., 0., 0., 0.],
+    [ 0., 0., 0., 0., 0.],
     [ 0., 0., 0., 0., 1.],
   ] )
   mdp.transition = np.array( [
