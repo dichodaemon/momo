@@ -36,4 +36,3 @@ learn(
   cf
 )
 
-print cf.mu

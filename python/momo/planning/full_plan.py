@@ -28,6 +28,9 @@ class full_plan( object ):
     dy += 1
     return dx * 3 + dy
 
+  def clean_copy( self ):
+    return grid( self.cost_function, self.x, self.y, self.width, self.height, self.delta )
+
   def update_grid( self, orientation, frame ):
     for a in xrange( self.grid.shape[2] ):
       y = self.y
