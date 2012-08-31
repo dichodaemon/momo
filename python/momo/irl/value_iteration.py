@@ -2,23 +2,18 @@ import numpy as np
 
 def value_iteration( mdp ):
   q = np.zeros( ( mdp.num_states, mdp.num_actions ) )
-  policy = np.ones( q.shape ) * 1.0 / mdp.num_actions
-  count = 0
   done = False
   while not done:
-    q_max = np.sum( policy * q, 1 )
+    q_max = np.max( q, 1 )
     q_new = mdp.reward + mdp.discount * np.transpose( np.dot( mdp.transition, q_max ) )
-    policy = 1.0 * ( q == np.transpose( np.tile( np.max( q, 1 ), ( mdp.num_actions, 1 ) ) ) )
-    policy = policy / np.transpose( np.tile( np.sum( policy, 1 ), ( mdp.num_actions, 1 ) ) )
-    #print "q_max", q_max
-    #print "q_new", q_new
-    #print "policy", policy
     if np.linalg.norm( q_new - q, 2 ) < 1E-10:
       done = True
     q = q_new
+  policy = 1.0 * ( q == np.transpose( np.tile( np.max( q, 1 ), ( mdp.num_actions, 1 ) ) ) )
+  policy = policy / np.transpose( np.tile( np.sum( policy, 1 ), ( mdp.num_actions, 1 ) ) )
   return q, np.argmax( policy, 1 )
 
-
+#-------------------------------------------------------------------------------
   
 if __name__ == "__main__":
   class dummy( object ): pass

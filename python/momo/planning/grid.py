@@ -14,6 +14,9 @@ class grid( object ):
     self.delta = delta
     self.grid_width = int( ceil( width / delta ) )
     self.grid_height = int( ceil( height / delta ) )
+
+    self.width = self.delta * self.grid_width
+    self.height = self.delta * self.grid_height
     self.grid = np.zeros( ( self.grid_width, self.grid_height, 8 ) )
 
   def __getitem__( self, coords ):
@@ -59,8 +62,8 @@ class grid( object ):
       if d < dist:
         k = i
         dist = d
-    return int( ceil( ( x - self.x ) / self.delta ) ),\
-           int( ceil( ( self.y + self.height - y ) / self.delta ) ), k
+    return int( floor( ( x - self.x ) / self.delta ) ),\
+           int( floor( ( self.y + self.height - y ) / self.delta ) ), k
 
   def to_world( self, i, j, k ):
     return self.x + self.delta * ( i + 0.5 ), self.y + self.height - self.delta * ( j + 0.5 ), angles[k]
@@ -68,8 +71,12 @@ class grid( object ):
 
 if __name__ == "__main__":
   g = grid( 1, 2, 3, 4, 1 )
-  for i, j, k, x, y, angle, value in g:
-    print i, j, k
-    for ni, nj, nk in g.neighbors( i, j, k ):
-      print "\t", ni, nj, nk
+  print g.to_world( 0, 0, 1 )
+  print g.to_world( 2, 3, 1 )
+  print g.from_world( 3.5, 5.5, 0 )
+  print g.from_world( 1.5, 2.5, 0 )
+  #for i, j, k, x, y, angle, value in g:
+    #print i, j, k
+    #for ni, nj, nk in g.neighbors( i, j, k ):
+      #print "\t", ni, nj, nk
 
