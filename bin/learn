@@ -32,7 +32,6 @@ output_name = "%s/%s.txt" % ( start_path, sys.argv[1] )
 cf = cost_function( features, data )
 learn( 
   output_name,
-  #cost_function( features, data[:10000] )#, 10 )
   cf
 )
 

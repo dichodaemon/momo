@@ -8,7 +8,7 @@ from math import *
 from irl_functions import preprocess_data
 import pylab as pl
 
-class irl_thrun( object ):
+class irl_henry( object ):
   def __init__( self, module, data = None ):
     self.module = module
 
@@ -16,77 +16,10 @@ class irl_thrun( object ):
       # Obtain parameters from data
       self.x, self.y, self.width, self.height, self.delta, self.grid, frame_data = preprocess_data( module, data )
 
-      # Initialize weight vector
-      self.w  = np.random.rand( frame_data.values()[0]["feature_sum"].shape[0] ) 
-      self.w /= np.linalg.norm( self.w )
-      #self.w = np.array( [
-       #5.90364126e-05, 1.02660153e-04, 1.02660153e-04, 1.02660153e-04,
-       #7.19979806e-05, 7.21409414e-05, 7.18744153e-05, 
-       #1.02660153e-04, 1.02660153e-04, 1.02660153e-04, 
-       #9.99999933e-01, 1.02660153e-04, 1.02660153e-04, 
-       #6.78030665e-05, 7.09040564e-05, 1.02660153e-04,
-       #1.02660153e-04
-      #] )
-
-      # Compute observed feature sum for selected samples
       ids = random.sample( frame_data.keys(), min( 3, len( frame_data.keys() ) ) )
-      #ids = [51]
-      feature_sum = self.w * 0.
-      for o_id in ids:
-        feature_sum += frame_data[o_id]["feature_sum"]
-
-      # Optimize weight vector
-      mu_p = []
-      j = 0
-      while True:
-        temp_sum = self.w * 0.
-        
-        for o_id in ids:
-          temp_sum += self.plan_features( frame_data[o_id] )
-        mu_p.append( temp_sum )
-        w, x = self.optimize( j, self.w, mu_p, feature_sum )
-        norm = np.linalg.norm( w )
-        diff = self.w - w / np.linalg.norm( w )
-        self.w = w / norm
-        if np.linalg.norm( diff ) < 1E-3:
-          break
-        j += 1
-
-  def optimize( self, j, w, mu_p, mu_e ):
-    n = len( w ) + j + 1
-    p = cvxopt.matrix( np.zeros( ( n, n ) ) )
-    q = cvxopt.matrix( np.zeros( n ) )
-    for i in xrange( len( w ) ):
-      p[i, i] = 1.0
-    a = cvxopt.matrix( np.zeros( ( 1, n ) ) )
-    for i in xrange( len( w ), n ):
-      a[0, i] = 1
-    b = cvxopt.matrix( np.ones( 1 ) )
-    g = cvxopt.matrix( np.zeros( ( n + len( w ), n ) ) )
-    for i in xrange( n ):
-      g[i, i] = 1
-    for i in xrange( len( w ) ):
-      g[n + i, i] = 1
-      for j in xrange( j + 1 ):
-        g[n + i, len( w ) + j] = -mu_p[j][i]
-    h = cvxopt.matrix( np.zeros( n + len( w ) ) )
-    for i in xrange( len( w ) ):
-      h[n + i] = mu_e[i]
-    solvers.options["maxiters"] = 20
-    solvers.options["show_progress"] = False
-    result = solvers.qp( p, q, - g, h, a, b, "glpk" )
-    r_w = w * 0.
-    for i in xrange( len( w ) ):
-      r_w[i] = result["x"][i]
-    r_x = np.zeros( j + 1 )
-    for i in xrange( j + 1 ):
-      r_x[i] = result["x"][len( w ) + i]
-    return r_w, r_x
 
   def plan_features( self, frame_data, h = 6 ):
     count = 0
-    #start = np.array( [10.85, 2.5, -1, 0] )
-    #goal = np.array( [-6.28, 2.5, -1, 0] )
     start = frame_data["states"][0] * 1
     goal  = frame_data["states"][-1] * 1
     executed = []

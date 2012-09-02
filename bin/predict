@@ -53,9 +53,9 @@ class Experiment( object ):
     y1 = []
     count = 0
     for f in momo.frames( self.data ):
-      count += 1
       if count % 1 != 0:
         continue
+      count += 1
       pl.clf()
       pl.axis( "scaled" )
       pl.xlim( self.grid_x, self.grid_x + self.width )
@@ -164,7 +164,7 @@ maxx = max( data, key = lambda x: x[3] )[3] + 2
 miny = min( data, key = lambda y: y[4] )[4] - 2
 maxy = max( data, key = lambda y: y[4] )[4] + 2
 
-exp1 = Experiment( minx, maxy, 0.5, maxx - minx, maxy - miny, samples, track, origin[3:], destination[3:] )
+exp1 = Experiment( minx, maxy, 0.25, maxx - minx, maxy - miny, samples, track, origin[3:], destination[3:] )
 
 exp1.add_case( 
   cost_function,
