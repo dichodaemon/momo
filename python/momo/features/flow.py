@@ -5,9 +5,8 @@ import numpy as np
 from math import *
 
 densities  = [3, 2, 1, 0]
-velocities = [0.05, 0.02, 0]
+velocities = [0.05, 0.02, 0.]
 angles     = [7 * pi / 8, 5 * pi / 8, 3 * pi / 8, pi / 8]
-
 
 n_density  = len( densities )
 n_velocity = len( velocities )
@@ -23,7 +22,7 @@ def compute( s1, s2, frame ):
   for o in frame:
     dist  = distance( s2[:2], o[:2] )
     r_vel   = o[2:] - agt_vel
-    if dist < 4:
+    if dist < 1:
       tot_density += 1
       sum_vel += r_vel
   if tot_density > 0:
@@ -49,6 +48,7 @@ def compute( s1, s2, frame ):
     result[n_density + i_angle * n_velocity + i_speed] = 1
   else:
     result[n_density - 1] = 1
-  result[n_density + n_velocity * n_angle] = distance( s1[:2], s2[:2] )
+    result[n_density + n_velocity * n_angle] = 1
+  #result[n_density + n_velocity * n_angle] = distance( s1[:2], s2[:2] )
   return result
 
