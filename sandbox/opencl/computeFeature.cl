@@ -54,7 +54,7 @@ __kernel void computeWeights(
   float speed, float delta, 
   uint width, uint height,
   uint frameSize, __constant float3 * frame, 
-  __constant float2 * actions, __constant float2 * angles, __constant float * speeds, 
+  __constant float2 * directions, __constant float2 * angles, __constant float * speeds, 
   __constant float * theta, __global float * costs
 ) {
   unsigned int direction = get_global_id( 0 );
@@ -62,7 +62,7 @@ __kernel void computeWeights(
   unsigned int column    = get_global_id( 2 );
 
   float2 position = (float2)( column * delta, row * delta );
-  float2 velocity = actions[direction] * speed;
+  float2 velocity = directions[direction] * speed;
   float f[17];
   
   flowFeature( position, velocity, frameSize, frame, angles, speeds, f );
@@ -71,6 +71,5 @@ __kernel void computeWeights(
   for ( int i = 0; i < 17; i++ ) {
     cost += f[i] * theta[i];
   }
-  //costs[direction * width * height + row * width + column] = direction * width * height + row * width + column;
   costs[direction * width * height + row * width + column] = cost;
 }

@@ -98,7 +98,8 @@ def filter_data( data ):
       tmp[o_id][-1] = [frame, timestamp, o_id, 1.0 * tracks[o_id].mean]
     else:
       tracks[o_id] = Track( np.array( [x, y] ) )
-      tmp[o_id] = [ [frame, timestamp, o_id, 1.0 * tracks[o_id].mean] ]
+      #tmp[o_id] = [ [frame, timestamp, o_id, 1.0 * tracks[o_id].mean] ]
+      tmp[o_id] = []
     result.extend( tmp[o_id] )
     tmp[o_id] = []
 
