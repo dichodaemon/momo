@@ -38,7 +38,17 @@ class grid( object ):
         y -= self.delta
 
   def neighbors( self, i, j, k ):
-    for td in xrange( k - 1, k + 2 ):
+    #for td in xrange( k - 1, k + 2 ):
+      #d = td % 8
+      #ni = i + directions[d][0]
+      #nj = j - directions[d][1]
+      #nk = d
+      #if ni < self.grid_width and\
+         #ni >= 0 and\
+         #nj < self.grid_height and\
+         #nj >= 0:
+        #yield ni, nj, nk
+    for td in xrange( k - 3, k + 4 ):
       d = td % 8
       ni = i + directions[d][0]
       nj = j - directions[d][1]

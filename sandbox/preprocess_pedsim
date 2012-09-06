@@ -15,7 +15,8 @@ def split_line( line ):
   v = line.split()
   return [
     int( float( v[0] ) ), float( v[1] ), int( float( v[2] ) ), 
-    float( v[3] ), float( v[4] )
+    float( v[3] ), float( v[4] ),
+    int( float( v[5] ) )
   ]
 
 def read_data( filename ):
@@ -24,7 +25,7 @@ def read_data( filename ):
   f.close()
   return data
 
-data = [d for d in read_data( sys.argv[1] ) if abs( d[3] ) < 10.5]
+data = [d for d in read_data( sys.argv[1] ) if abs( d[3] ) <= 18 and abs( d[4] ) <= 3]
 
 lastid = 0
 ids  = {}
@@ -34,6 +35,8 @@ result = []
 for d in data:
   if not d[2] in ids or d[0] - last[d[2]] > 1:
     ids[d[2]] = lastid
+    if d[5] == 1:
+      print lastid
     lastid += 1
   last[d[2]] = d[0]
   d[2] = ids[d[2]]

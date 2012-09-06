@@ -15,12 +15,13 @@ class irl_thrun( object ):
     self.module = module
 
     if data != None:
-      ids = set( [80] )
+      ids = set( [46] )
       # Obtain parameters from data
       self.x, self.y, self.width, self.height, self.delta, self.grid, frame_data = preprocess_data( module, data, ids )
 
       # Initialize weight vector
       self.w  = np.random.rand( frame_data.values()[0]["feature_sum"].shape[0] ) 
+      self.w /= self.w
       self.w /= np.linalg.norm( self.w )
 
       # Compute observed feature sum for selected samples
@@ -31,8 +32,10 @@ class irl_thrun( object ):
 
       # Optimize weight vector
       mu_p = []
+      weights = []
       j = 0
       while True:
+        print "-" * 80
         temp_sum = self.w * 0.
         
         for o_id in ids:
@@ -41,11 +44,21 @@ class irl_thrun( object ):
         print "exhibited ", feature_sum
         print "planned   ", temp_sum
         print "difference", feature_sum - temp_sum
+        print "total diff", sum( abs( feature_sum -temp_sum ) )
         w, x = self.optimize( j, self.w, mu_p, feature_sum )
         norm = np.linalg.norm( w )
+        print "x", x
+        print "norm", norm
         diff = self.w - w / np.linalg.norm( w )
         self.w = w / norm
+        weights.append( self.w )
         if np.linalg.norm( diff ) < 1E-3:
+          print "=" * 80
+          print "Finished"
+          print "=" * 80
+          self.w = weights[np.argmax( x )]
+          for o_id in ids:
+            self.plan_features( frame_data[o_id] )
           break
         j += 1
 
@@ -90,15 +103,15 @@ class irl_thrun( object ):
       if count % h == 0:
         self.current_frame = frame_data["frames"][index]
         for i, j, k, x, y, angle, value in self.grid:
-          angle = momo.angle.as_vector( angle ) * 0.04
+          angle = momo.angle.as_vector( angle ) * np.linalg.norm( frame_data["states"][index] )
           state = np.array( [x, y, angle[0], angle[1]] )
           self.grid[i, j, k] = self( state, state, frame_data["frames"][index] )
 
-        scale = 1.
+        scale = 10.
         while True:
           path = self.plan_count( start, goal, scale )
           if path == None:
-            scale *= 0.1
+            scale *= 0.9
           else:
             break
 
@@ -148,7 +161,13 @@ class irl_thrun( object ):
         start = self.grid.to_world( *path[min( h, len( path ) - 1 )] )
         angle = momo.angle.as_vector( start[2] )
         start = np.array( [start[0], start[1], angle[0], angle[1]] )
+        if len( path ) == 1:
+          break
       count += 1
+      print "Length observed", len( frame_data["frames"] )
+      print "Length executed", len( executed )
+      print "Length plan", len( path )
+      print "Sum", sum( total )
     return total
 
   def draw_features( self, event ):
@@ -226,7 +245,8 @@ class irl_thrun( object ):
           g[(ci, cj, ck)] = children_g
           if not (ci, cj, ck) in h:
             h[(ci, cj, ck)] = momo.distance( np.array( [ci, cj] ), np.array( goal[:2] ) ) * scaling
-          if self.grid[ci, cj, ck] < 2**0.5 * scaling:
+          if self.grid[ci, cj, ck] < scaling:
+            print self.grid[ci, cj, ck], scaling
             return None
           if not (ci, cj, ck) in visited:
             pending.append( (ci, cj, ck) )
@@ -238,6 +258,8 @@ class irl_thrun( object ):
               #open_grid[cj, ci] = min( open_grid[cj, ci], children_g + h[(ci, cj, ck)] )
               open_grid[cj, ci] = min( open_grid[cj, ci], self.grid[ci, cj, 4] )
       pending.sort( key = lambda v: g[(v[0], v[1], v[2])] + h[(v[0], v[1], v[2])] )
+      for v in pending:
+        print g[(v[0], v[1], v[2])] + h[(v[0], v[1], v[2])]
     
     pl.imshow( open_grid, pl.cm.jet, None, None, "none", extent = (self.x, self.x +self.width, self.y, self.y + self.height ) )
     pl.draw()

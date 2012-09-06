@@ -13,8 +13,6 @@ def preprocess_data( module, data, o_ids ):
   last_processed = 1000000
   for frame in momo.frames( data ):
     tmp = []
-    if process:
-      print last_processed, frame[0][0]
     for o_frame, o_time, o_id, o_x, o_y, o_dx, o_dy in frame:
       if o_id in o_ids:
         process = True
@@ -80,9 +78,9 @@ def preprocess_data( module, data, o_ids ):
           states.append( frame["states"][index] )
           features.append( frame["features"][index] )
           frames.append( frame["frames"][index] )
-        if "feature_sum" not in frame:
-          frame["feature_sum"] = frame["features"][0] * 0
-        frame["feature_sum"] += frame["features"][index]
+          if "feature_sum" not in frame:
+            frame["feature_sum"] = frame["features"][0] * 0
+          frame["feature_sum"] += frame["features"][index]
     frame["features"] = features
     frame["states"] = states
     frame["frames"] = frames
