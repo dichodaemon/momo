@@ -1,105 +1,95 @@
-//
-//
-//  Description:
-//      Implementation of Dijkstra's Single-Source Shortest Path (SSSP) algorithm on the GPU.
-//      The basis of this implementation is the paper:
-//
-//          \"Accelerating large graph algorithms on the GPU using CUDA\" by
-//          Parwan Harish and P.J. Narayanan
-//
-//
-//  Author:
-//      Dan Ginsburg
-//      <daniel.ginsburg@childrens.harvard.edu>
-//
-//  Children's Hospital Boston
-//
+// Based on the implementation of Dan Ginsburg
+// http://code.google.com/p/opencl-book-samples/
 
 
-///
-/// This is part 1 of the Kernel from Algorithm 4 in the paper
-///
-__kernel  void OCL_SSSP_KERNEL1(__global int *vertexArray, __global int *edgeArray, __global float *weightArray,
-                               __global int *maskArray, __global float *costArray, __global float *updatingCostArray,
-                               int vertexCount, int edgeCount )
-{
-    // access thread id
-    int tid = get_global_id(0);
+__kernel  void dijkstraPass1(
+  uint width, uint height, 
+  __constant int2 * directions, 
+  __global float * costArray, 
+  __global int * maskArray, 
+  __global float * cummulated, 
+  __global float * tmpCummulated,
+  __global int * tmpParents
+) {
+  int direction = get_global_id( 0 );
+  int row       = get_global_id( 1 );
+  int column    = get_global_id( 2 );
 
-    if ( maskArray[tid] != 0 )
-    {
-        maskArray[tid] = 0;
+  unsigned int stateIndex = direction * width * height + row * width + column;
 
-        int edgeStart = vertexArray[tid];
-        int edgeEnd;
-        if (tid + 1 < (vertexCount))
-        {
-            edgeEnd = vertexArray[tid + 1];
+  if ( maskArray[stateIndex] != 0 ) {
+    maskArray[stateIndex] = 0;
+    for ( int d = direction - 1; d < direction + 2; d++ ) {
+      int dd = d;
+      if ( dd < 0 ) {
+        dd += 8;
+      } else if ( dd > 7 ) {
+        dd -= 8;
+      }
+      int2 delta = directions[dd];
+      int c = column - delta.x;
+      int r = row - delta.y;
+      if ( c >= 0 and c < width && r >= 0 && r < height ) {
+        int newIndex = dd * width * height + r * width + c;
+        float g = cummulated[stateIndex] + costArray[newIndex];
+        if ( tmpCummulated[newIndex] > g ) {
+          tmpCummulated[newIndex] = g;
+          tmpParents[newIndex] = stateIndex;
         }
-        else
-        {
-            edgeEnd = edgeCount;
-        }
-
-        for(int edge = edgeStart; edge < edgeEnd; edge++)
-        {
-            int nid = edgeArray[edge];
-
-            // One note here: whereas the paper specified weightArray[nid], I
-            //  found that the correct thing to do was weightArray[edge].  I think
-            //  this was a typo in the paper.  Either that, or I misunderstood
-            //  the data structure.
-            if (updatingCostArray[nid] > (costArray[tid] + weightArray[edge]))
-            {
-                updatingCostArray[nid] = (costArray[tid] + weightArray[edge]);
-            }
-        }
+      }
     }
+  }
 }
 
-///
-/// This is part 2 of the Kernel from Algorithm 5 in the paper.  
-///
-__kernel  void OCL_SSSP_KERNEL2(__global int *vertexArray, __global int *edgeArray, __global float *weightArray,
-                                __global int *maskArray, __global float *costArray, __global float *updatingCostArray,
-                                int vertexCount)
-{
-    // access thread id
-    int tid = get_global_id(0);
+__kernel  void dijkstraPass2(
+  uint width, uint height, 
+  __global int *maskArray, 
+  __global float *cummulated, 
+  __global float *tmpCummulated,
+  __global int * parents,
+  __global int *tmpParents
+) {
+  unsigned int direction = get_global_id( 0 );
+  unsigned int row       = get_global_id( 1 );
+  unsigned int column    = get_global_id( 2 );
 
+  unsigned int stateIndex = direction * width * height + row * width + column;
 
-    if (costArray[tid] > updatingCostArray[tid])
-    {
-        costArray[tid] = updatingCostArray[tid];
-        maskArray[tid] = 1;
-    }
-
-    updatingCostArray[tid] = costArray[tid];
+  if ( cummulated[stateIndex] > tmpCummulated[stateIndex] ) {
+    cummulated[stateIndex] = tmpCummulated[stateIndex];
+    parents[stateIndex] = tmpParents[stateIndex];
+    maskArray[stateIndex] = 1;
+  }
+  tmpCummulated[stateIndex] = cummulated[stateIndex];
 }
 
+__kernel void initializeBuffers( 
+  uint width, uint height, 
+  __global int * maskArray, 
+  __global float * cummulated, 
+  __global float * tmpCummulated,
+  __global int * parents, 
+  __global int * tmpParents,
+  __constant int3 * sourceVertex 
+) {
+  unsigned int direction = get_global_id( 0 );
+  unsigned int row       = get_global_id( 1 );
+  unsigned int column    = get_global_id( 2 );
 
-///
-/// Kernel to initialize buffers
-///
-__kernel void initializeBuffers( __global int *maskArray, __global float *costArray, __global float *updatingCostArray,
-                                 int sourceVertex, int vertexCount )
-{
-    // access thread id
-    int tid = get_global_id(0);
+  unsigned int sourceIndex = sourceVertex->z * width * height + sourceVertex->y * width + sourceVertex->x;
+  unsigned int stateIndex  = direction * width * height + row * width + column;
 
 
-    if (sourceVertex == tid)
-    {
-        maskArray[tid] = 1;
-        costArray[tid] = 0.0;
-        updatingCostArray[tid] = 0.0;
-    }
-    else
-    {
-        maskArray[tid] = 0;
-        costArray[tid] = FLT_MAX;
-        updatingCostArray[tid] = FLT_MAX;
-    }
-
+  if ( sourceIndex == stateIndex ) {
+    maskArray[stateIndex] = 1;
+    cummulated[stateIndex] = 0.0;
+    tmpCummulated[stateIndex] = 0.0;
+  } else {
+    maskArray[stateIndex] = 0;
+    cummulated[stateIndex] = FLT_MAX;
+    tmpCummulated[stateIndex] = FLT_MAX;
+  }
+  parents[stateIndex] = -1;
+  tmpParents[stateIndex] = -1;
 }
 
