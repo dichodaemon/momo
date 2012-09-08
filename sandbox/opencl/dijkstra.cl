@@ -31,7 +31,7 @@ __kernel  void dijkstraPass1(
       int r = row - delta.y;
       if ( c >= 0 and c < width && r >= 0 && r < height ) {
         int newIndex = dd * width * height + r * width + c;
-        float g = cummulated[stateIndex] + costArray[newIndex];
+        float g = cummulated[stateIndex] + costArray[newIndex] * sqrt( 1.0 * abs( delta.x ) + abs( delta.y ) );
         if ( tmpCummulated[newIndex] > g ) {
           tmpCummulated[newIndex] = g;
           tmpParents[newIndex] = stateIndex;

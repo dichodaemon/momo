@@ -159,12 +159,15 @@ if __name__ == "__main__":
   vmax = sum( ts[-2:] )
 
   solver = Solver()
-  width  = 256
-  height = 64
-  delta  = 0.1
+  width  = 128
+  height = 32
+  delta  = 0.15
 
   pl.figure( 1, figsize = ( 30, 10 ), dpi = 75 )
   pl.ion()
+
+  #costs = np.random.random( (8, height, width) )
+  #costs = ( ( costs > 0.7 ) * 9.9 + 0.1 ).astype( np.float32 )
 
   for f in momo.frames( data ):
     frame = []
@@ -176,7 +179,7 @@ if __name__ == "__main__":
     t = time.time()
 
     costs = solver.compute_weights( width, height, delta, 0.04, 3, theta, frame )
-    cummulated, parents = solver.compute_dijkstra( width, height, costs, np.array( [254, 48, 0], dtype = np.int32 ) )
+    cummulated, parents = solver.compute_dijkstra( width, height, costs, np.array( [100, 24, 0], dtype = np.int32 ) )
 
     t = time.time() - t
     print "Compute FPS", 1 / t
@@ -228,7 +231,7 @@ if __name__ == "__main__":
     pl.xlim( 0, width * delta )
     pl.ylim( 0, height * delta )
     pl.imshow( cummulated[0], pl.cm.jet, None, None, "none", extent = (0, width * delta, 0, height * delta ), origin = "lower", vmin = 0, vmax = 80 )
-    x, y = get_path( width, height, 0, 48, 0, parents )
+    x, y = get_path( width, height, 0, 24, 0, parents )
     pl.plot( x, y, "m." )
     pl.draw()
     t = time.time() - t

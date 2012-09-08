@@ -69,9 +69,9 @@ __kernel void computeWeights(
   flowFeature( position, velocity, radius, frameSize, frame, angles, speeds, f );
 
   float cost = 0;
-  float l = length( directions[direction] );
+  f[17] = 1;  
   for ( int i = 0; i < 18; i++ ) {
-    cost += f[i] * theta[i] * l;
+    cost += f[i] * theta[i];// * length( directions[direction] );
   }
   costs[direction * width * height + row * width + column] = cost;
 }
