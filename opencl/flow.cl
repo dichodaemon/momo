@@ -1,4 +1,4 @@
-void flowFeature( 
+void computeFeature( 
   float2 position, float2 velocity, float radius,
   uint frameSize, __constant float3 * frame, 
   __constant float2 * angles, __constant float * speeds, 
@@ -12,7 +12,7 @@ void flowFeature(
   for ( int i = 0; i < frameSize; i++ ) {
     float2 other = frame[i].lo;
     float2 diff  = position - other;
-    float dist   = dot( diff, diff );
+    float dist   = length( diff );
     if ( dist < radius ) {
       density += 1;
       avgVelocity += frame[i].hi;
@@ -51,7 +51,7 @@ void flowFeature(
   }
 }
 
-__kernel void computeWeights( 
+__kernel void computeCosts( 
   float speed, float delta, float radius, 
   uint width, uint height,
   uint frameSize, __constant float3 * frame, 
@@ -66,10 +66,9 @@ __kernel void computeWeights(
   float2 velocity = directions[direction] * speed;
   float f[18];
   
-  flowFeature( position, velocity, radius, frameSize, frame, angles, speeds, f );
+  computeFeature( position, velocity, radius, frameSize, frame, angles, speeds, f );
 
   float cost = 0;
-  f[17] = 1;  
   for ( int i = 0; i < 18; i++ ) {
     cost += f[i] * theta[i];// * length( directions[direction] );
   }

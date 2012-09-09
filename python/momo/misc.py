@@ -1,6 +1,9 @@
 import angle
 import numpy as np
 import random
+import os
+
+BASE_DIR = os.path.abspath( os.path.join( os.path.dirname( __file__ ), "..", ".." ) )
 
 def split_line( line ):
   v = line.split()

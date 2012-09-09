@@ -1,4 +1,5 @@
 from misc import *
+import opencl
 from accum import *
 import angle
 import features
