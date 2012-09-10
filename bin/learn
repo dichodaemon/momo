@@ -19,8 +19,9 @@ def learn( name, cost_function ):
 
 random.seed( 0 )
 
-data     = momo.read_data( "data/filtered/%s.txt" % sys.argv[1] )
-features = momo.features.__dict__[sys.argv[2]] 
+data = momo.read_data( "data/filtered/%s.txt" % sys.argv[1] )
+
+features = momo.irl.features.__dict__[sys.argv[2]] 
 cost_function = momo.cost_functions.__dict__[sys.argv[3]]
 
 start_path = "data/models/%s/%s" % ( sys.argv[2], sys.argv[3] )

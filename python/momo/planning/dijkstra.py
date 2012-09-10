@@ -11,7 +11,9 @@ class dijkstra( momo.opencl.Program ):
     mf = cl.mem_flags
     self.idirection_buffer = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = momo.irl.features.flow.DIRECTIONS.astype( np.int32 ) )
 
-  def __call__( self, costs, destination ):
+  def __call__( self, costs, goal ):
+    if ( costs < 0 ).any():
+      raise runtime_error( "The cost matrix cannot have negative values" )
     mf = cl.mem_flags
 
     width = costs.shape[2]
@@ -21,8 +23,8 @@ class dijkstra( momo.opencl.Program ):
     floats = np.zeros( costs.shape, dtype=np.float32 )
     ints   = np.zeros( costs.shape, dtype=np.int32 )
 
-    dest_buffer  = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = destination )
-    cost_buffer  = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = costs )
+    goal_buffer  = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = goal.astype( np.int32 ) )
+    cost_buffer  = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = costs.astype( np.float32 ) )
 
     cummulated_buffer  = cl.Buffer( self.context, mf.READ_WRITE, floats.nbytes )
     tcummulated_buffer  = cl.Buffer( self.context, mf.READ_WRITE, floats.nbytes ) 
@@ -35,7 +37,7 @@ class dijkstra( momo.opencl.Program ):
       np.int32( width ), np.int32( height ),
       mask_buffer, cummulated_buffer, tcummulated_buffer, 
       parent_buffer, tparent_buffer, 
-      dest_buffer
+      goal_buffer
     )
 
     count = 0
@@ -64,15 +66,15 @@ class dijkstra( momo.opencl.Program ):
     cl.enqueue_copy( self.queue, ints, parent_buffer )
     return floats, ints
 
-  def get_path( self, parents, x, y, k ):
+  def get_path( self, parents, start ):
     width = parents.shape[2]
     height = parents.shape[1]
-    p1 = k * width * height + y * width + x
+    p1 = start[2] * width * height + start[1] * width + start[0]
     result = []
     while p1 != -1:
-      i = p1 / ( height * width )
-      j = ( p1 % ( height * width ) ) / width
-      k = p1 % width
-      result.append( [k, j, i] )
-      p1 = parents[i, j, k]
-    return np.array( result )
+      k = p1 / ( height * width )
+      y = ( p1 % ( height * width ) ) / width
+      x = p1 % width
+      result.append( [x, y, k] )
+      p1 = parents[k, y, x]
+    return np.array( result, dtype = np.int32 )

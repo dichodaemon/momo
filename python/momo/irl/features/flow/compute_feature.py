@@ -1,3 +1,4 @@
+import momo
 import numpy as np
 from math import *
 from __common__ import *
@@ -5,12 +6,13 @@ from __common__ import *
 def compute_feature( reference, frame, radius = 3 ):
   density = 0
   avg_velocity = np.array( [0.] * 2 )
+  feature = np.array( [0.] * FEATURE_LENGTH, dtype = np.float32 )
   
-  for i in xrange( FRAME_SIZE ):
+  for i in xrange( len( frame ) ):
     dist  = momo.distance( frame[i][:2], reference[:2] )
     if dist < radius:
       density += 1
-      avg_velocity += frame[2:]
+      avg_velocity += frame[i][2:]
 
   if ( density >= 3 ):
     feature[3] = 1
@@ -21,7 +23,7 @@ def compute_feature( reference, frame, radius = 3 ):
     feature[16] = 1
   else:
     avg_velocity /= density
-    avg_velocity = velicity - avg_velocity
+    avg_velocity = reference[2:] - avg_velocity
     avg_velocity[1] = abs( avg_velocity[1] )
     angle = avg_velocity / np.linalg.norm( avg_velocity )
     angle_index = 0
@@ -34,10 +36,11 @@ def compute_feature( reference, frame, radius = 3 ):
     speed = np.linalg.norm( avg_velocity )
     speed_index = 0;
     for i in xrange( 3 ):
-      if speed > SPEEDS[i]
-      speed_index = i
+      if speed > SPEEDS[i]:
+       speed_index = i
     feature[4 + angle_index * 3 + speed_index] = 1
-    feature[17] = 1
+  feature[17] = 1
+  return feature
 
 
 

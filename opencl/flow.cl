@@ -1,6 +1,6 @@
 void computeFeature( 
   float2 position, float2 velocity, float radius,
-  uint frameSize, __constant float3 * frame, 
+  uint frameSize, __constant float4 * frame, 
   __constant float2 * angles, __constant float * speeds, 
   float * feature 
 ) {
@@ -47,14 +47,14 @@ void computeFeature(
       }
     }
     feature[4 + angleIndex * 3 + speedIndex] = 1;
-    feature[17] = 1;
   }
+  feature[17] = 1;
 }
 
 __kernel void computeCosts( 
   float speed, float delta, float radius, 
   uint width, uint height,
-  uint frameSize, __constant float3 * frame, 
+  uint frameSize, __constant float4 * frame, 
   __constant float2 * directions, __constant float2 * angles, __constant float * speeds, 
   __constant float * theta, __global float * costs
 ) {

@@ -1,6 +1,8 @@
 import numpy as np
 from math import *
 
+FEATURE_LENGTH = 18
+
 DIRECTIONS = np.array( [
   [ 1.,  0.],
   [ 1.,  1.],
