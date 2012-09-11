@@ -23,6 +23,9 @@ def learn( feature_module, convert, frame_data, ids ):
       frame_data[o_id]["frames"] 
     )
     mu_observed += val
+  mu_observed[:4] /= np.sum( mu_observed[:4] )
+  mu_observed[4:17] /= np.sum( mu_observed[4:17] )
+  mu_observed[17] = 1
 
   # Main optimization loop
   mu_planned = []
@@ -35,6 +38,9 @@ def learn( feature_module, convert, frame_data, ids ):
     for o_id in ids:
       val = compute_plan_features( feature_module, convert, w, frame_data[o_id] )
       temp_sum += val
+    temp_sum[:4] /= np.sum( temp_sum[:4] )
+    temp_sum[4:17] /= np.sum( temp_sum[4:17] )
+    temp_sum[17] = 1
 
     mu_planned.append( temp_sum )
     weights.append( w )
