@@ -71,9 +71,6 @@ def compute_plan_features( feature_module, convert, w, data ):
   traversed = []
   count = 0
 
-  #print "*" * 80
-  #print states[0], states[-1], current, goal
-
   result = None
 
   if True:
@@ -162,7 +159,7 @@ def optimize(  j, w, mu_planned, mu_observed ):
       g[n + i, len( w ) + tj] = mu_planned[tj][i]
   h = cvxopt.matrix( np.zeros( n + len( w ) ) )
   for i in xrange( len( w ) ):
-    h[n + i] = mu_observed[i] # Should it be a - here?
+    h[n + i] = mu_observed[i]
   solvers.options["maxiters"] = 20
   solvers.options["show_progress"] = False
   result = solvers.qp( p, q, - g, h, a, b, "glpk" )
