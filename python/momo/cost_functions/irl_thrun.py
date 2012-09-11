@@ -11,16 +11,10 @@ class irl_thrun( object ):
 
     if data != None:
       # Obtain parameters from data
-      convert = momo.convert( data, 0.15 )
+      convert = momo.convert( data, 0.3 )
       frame_data = convert.preprocess_data( data )
-      thetas = []
-      costs  = []
-      for i in xrange( 10 ):
-        theta, cost  = momo.irl.learning.thrun.learn( module, convert, frame_data, [46, 47, 48] )
-        thetas.append( theta )
-        costs.append( cost )
-        print "costs", costs
-      self.theta = thetas[np.argmax( costs )]
+      #self.theta = momo.irl.learning.thrun.learn( module, convert, frame_data, [45, 46] ) #, 48] )
+      self.theta = momo.irl.learning.thrun.learn( module, convert, frame_data, [48] ) #, 48] )
 
   def __call__( self, s1, s2, frame ):
     value = self.module.compute( s1, s2, frame )

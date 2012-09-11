@@ -23,6 +23,7 @@ def learn( feature_module, convert, frame_data, ids ):
       frame_data[o_id]["frames"] 
     )
     mu_observed += val
+  mu_observed /= np.linalg.norm( mu_observed[:4] )
 
   # Main optimization loop
   mu_planned = []
@@ -30,11 +31,13 @@ def learn( feature_module, convert, frame_data, ids ):
   counts = []
   j = 0
 
-  for reps in xrange( 10 ):
+  for reps in xrange( 18 ):
     temp_sum = w * 0.
     for o_id in ids:
       val = compute_plan_features( feature_module, convert, w, frame_data[o_id] )
       temp_sum += val
+    temp_sum /= np.linalg.norm( temp_sum[:4] )
+    print temp_sum
 
     mu_planned.append( temp_sum )
     weights.append( w )
@@ -47,10 +50,12 @@ def learn( feature_module, convert, frame_data, ids ):
     j += 1
     print "x", x
     print "costs", counts
+    if norm < 1E-4:
+      break
 
-  w = weights[np.argmax( x )]
-  c = counts[np.argmax( x )]
-  return w, c
+  #w = weights[np.argmax( x )] THIS IS THE CORRECT ONE
+  w = weights[np.argmin( counts )]
+  return w
 
 
 def compute_plan_features( feature_module, convert, w, data ):
@@ -61,10 +66,13 @@ def compute_plan_features( feature_module, convert, w, data ):
   frames = data["frames"]
   start = states[0]
   goal = states[-1]
-  goal = convert.from_world( goal )
-  current = convert.from_world( start )
+  goal = convert.from_world2( goal )
+  current = convert.from_world2( start )
   traversed = []
   count = 0
+
+  #print "*" * 80
+  #print states[0], states[-1], current, goal
 
   result = None
 
@@ -150,11 +158,11 @@ def optimize(  j, w, mu_planned, mu_observed ):
     g[i, i] = 1
   for i in xrange( len( w ) ):
     g[n + i, i] = 1
-    for j in xrange( j + 1 ):
-      g[n + i, len( w ) + j] = -mu_planned[j][i]
+    for tj in xrange( j + 1 ):
+      g[n + i, len( w ) + tj] = mu_planned[tj][i]
   h = cvxopt.matrix( np.zeros( n + len( w ) ) )
   for i in xrange( len( w ) ):
-    h[n + i] = mu_observed[i]
+    h[n + i] = mu_observed[i] # Should it be a - here?
   solvers.options["maxiters"] = 20
   solvers.options["show_progress"] = False
   result = solvers.qp( p, q, - g, h, a, b, "glpk" )
