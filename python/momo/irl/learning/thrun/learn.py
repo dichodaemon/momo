@@ -23,7 +23,7 @@ def learn( feature_module, convert, frame_data, ids ):
       frame_data[o_id]["frames"] 
     )
     mu_observed += val
-  mu_observed /= np.linalg.norm( mu_observed[:4] )
+  #mu_observed /= np.sum( mu_observed[:4] )
 
   # Main optimization loop
   mu_planned = []
@@ -36,24 +36,29 @@ def learn( feature_module, convert, frame_data, ids ):
     for o_id in ids:
       val = compute_plan_features( feature_module, convert, w, frame_data[o_id] )
       temp_sum += val
-    temp_sum /= np.linalg.norm( temp_sum[:4] )
-    print temp_sum
+    #temp_sum /= np.sum( temp_sum[:4] )
 
     mu_planned.append( temp_sum )
     weights.append( w )
     counts.append( np.linalg.norm( temp_sum - mu_observed ) )
-    w, x = optimize( j, w, mu_planned, mu_observed )
+    w, x = optimize1( j, w, mu_planned, mu_observed )
     norm = np.linalg.norm( w )
     diff = w - w / norm
-    print "norm", norm
+
+    r = w * 0.
+    for i in xrange( len( mu_planned ) ):
+      r += mu_planned[i] * x[i]
+
+    print "w = mu - mu_e", w - ( -r - mu_observed )
+
     w = w / norm
     j += 1
+    print "norm", norm
     print "x", x
     print "costs", counts
     if norm < 1E-4:
       break
 
-  #w = weights[np.argmax( x )] THIS IS THE CORRECT ONE
   w = weights[np.argmin( counts )]
   return w
 
@@ -142,27 +147,58 @@ def feature_sum( feature_module, states, frames ):
 
 def optimize(  j, w, mu_planned, mu_observed ):
   n = len( w ) + j + 1
-  p = cvxopt.matrix( np.zeros( ( n, n ) ) )
-  q = cvxopt.matrix( np.zeros( n ) )
+  p = cvxopt.matrix( np.zeros( ( n, n ) ), tc = "d" )
+  q = cvxopt.matrix( np.zeros( n ), tc = "d" )
   for i in xrange( len( w ) ):
     p[i, i] = 1.0
-  a = cvxopt.matrix( np.zeros( ( 1, n ) ) )
+  a = cvxopt.matrix( np.zeros( ( 1, n ) ), tc = "d" )
   for i in xrange( len( w ), n ):
     a[0, i] = 1
-  b = cvxopt.matrix( np.ones( 1 ) )
-  g = cvxopt.matrix( np.zeros( ( n + len( w ), n ) ) )
+  b = cvxopt.matrix( np.ones( 1 ), tc = "d" )
+  g = cvxopt.matrix( np.zeros( ( n + len( w ), n ) ), tc = "d" )
   for i in xrange( n ):
     g[i, i] = 1
   for i in xrange( len( w ) ):
     g[n + i, i] = 1
     for tj in xrange( j + 1 ):
-      g[n + i, len( w ) + tj] = mu_planned[tj][i]
-  h = cvxopt.matrix( np.zeros( n + len( w ) ) )
+      g[n + i, len( w ) + tj] = mu_planned[tj][i] #Why does this not work with negative?
+  h = cvxopt.matrix( np.zeros( n + len( w ) ), tc = "d" )
   for i in xrange( len( w ) ):
-    h[n + i] = mu_observed[i]
+    h[n + i] = -mu_observed[i]
   solvers.options["maxiters"] = 20
   solvers.options["show_progress"] = False
-  result = solvers.qp( p, q, - g, h, a, b, "glpk" )
+  result = solvers.qp( p, q, - g, -h, a, b, "glpk" )
+  r_w = w * 0.
+  for i in xrange( len( w ) ):
+    r_w[i] = result["x"][i]
+  r_x = np.zeros( j + 1 )
+  for i in xrange( j + 1 ):
+    r_x[i] = result["x"][len( w ) + i]
+  return r_w, r_x
+
+def optimize1(  j, w, mu_planned, mu_observed ):
+  n = len( w ) + j + 1
+  p = cvxopt.matrix( np.zeros( ( n, n ) ), tc = "d" )
+  q = cvxopt.matrix( np.zeros( n ), tc = "d" )
+  for i in xrange( len( w ) ):
+    p[i, i] = 1.0
+  a = cvxopt.matrix( np.zeros( ( len( w ) + 1, n ) ), tc = "d" )
+  for i in xrange( len( w ), n ):
+    a[0, i] = 1
+  for i in xrange( len( w ) ):
+    a[1 + i, i] = 1
+    for tj in xrange( j + 1 ):
+      a[1 + i, len( w ) + tj] = mu_planned[tj][i] 
+  b = cvxopt.matrix( np.ones( 1 + len( w ) ), tc = "d" )
+  for i in xrange( len( w ) ):
+    b[1 + i] = -mu_observed[i]
+  g = cvxopt.matrix( np.zeros( ( n , n ) ), tc = "d" )
+  for i in xrange( n ):
+    g[i, i] = 1
+  h = cvxopt.matrix( np.zeros( n ), tc = "d" )
+  solvers.options["maxiters"] = 20
+  solvers.options["show_progress"] = False
+  result = solvers.qp( p, q, - g, -h, a, b, "glpk" )
   r_w = w * 0.
   for i in xrange( len( w ) ):
     r_w[i] = result["x"][i]
