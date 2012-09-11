@@ -7,7 +7,7 @@ import cvxopt
 from cvxopt import solvers
 from math import *
 
-def learn( feature_module, convert, frame_data, ids ):
+def learn( feature_module, convert, frame_data, ids, radius ):
   feature_length = feature_module.FEATURE_LENGTH
 
   # Initialize weight vector
@@ -17,15 +17,12 @@ def learn( feature_module, convert, frame_data, ids ):
   # Compute observed feature sum for selected samples
   mu_observed = w * 0.
   for o_id in ids:
-    val = feature_sum( 
+    val = momo.irl.features.feature_sum( 
       feature_module, 
       [convert.to_world2( convert.from_world2( s ), np.linalg.norm( s[2:] ) ) for s in frame_data[o_id]["states"]], 
       frame_data[o_id]["frames"] 
     )
     mu_observed += val
-  mu_observed[:4] /= np.sum( mu_observed[:4] )
-  mu_observed[4:17] /= np.sum( mu_observed[4:17] )
-  mu_observed[17] = 1
 
   # Main optimization loop
   mu_planned = []
@@ -33,14 +30,11 @@ def learn( feature_module, convert, frame_data, ids ):
   counts = []
   j = 0
 
-  for reps in xrange( 10 ):
+  for reps in xrange( 18 ):
     temp_sum = w * 0.
     for o_id in ids:
-      val = compute_plan_features( feature_module, convert, w, frame_data[o_id] )
+      val = compute_plan_features( feature_module, convert, w, frame_data[o_id], radius )
       temp_sum += val
-    temp_sum[:4] /= np.sum( temp_sum[:4] )
-    temp_sum[4:17] /= np.sum( temp_sum[4:17] )
-    temp_sum[17] = 1
 
     mu_planned.append( temp_sum )
     weights.append( w )
@@ -48,27 +42,25 @@ def learn( feature_module, convert, frame_data, ids ):
     w, x = optimize( j, w, mu_planned, mu_observed )
     norm = np.linalg.norm( w )
     diff = w - w / norm
-    print "norm", norm
     w = w / norm
     j += 1
-    print "x", x
-    print "costs", counts
+    if norm < 1E-4:
+      break
 
-  w = weights[np.argmax( x )]
-  c = counts[np.argmax( x )]
-  return w, c
+  w = weights[np.argmin( counts )]
+  return w
 
 
-def compute_plan_features( feature_module, convert, w, data ):
-  compute_costs = momo.irl.features.flow.compute_costs( convert, radius = 3 )
+def compute_plan_features( feature_module, convert, w, data, radius ):
+  compute_costs = momo.irl.features.flow.compute_costs( convert, radius )
   plan = momo.planning.dijkstra()
 
   states = data["states"]
   frames = data["frames"]
   start = states[0]
   goal = states[-1]
-  goal = convert.from_world( goal )
-  current = convert.from_world( start )
+  goal = convert.from_world2( goal )
+  current = convert.from_world2( start )
   traversed = []
   count = 0
 
@@ -134,36 +126,30 @@ def compute_plan_features( feature_module, convert, w, data ):
 
   return result
 
-def feature_sum( feature_module, states, frames ):
-  result = np.array( [0.] * feature_module.FEATURE_LENGTH )
-  for i in xrange( len( states ) ):
-    result += feature_module.compute_feature( states[i], frames[i] )
-  return result
-
 
 def optimize(  j, w, mu_planned, mu_observed ):
   n = len( w ) + j + 1
-  p = cvxopt.matrix( np.zeros( ( n, n ) ) )
-  q = cvxopt.matrix( np.zeros( n ) )
+  p = cvxopt.matrix( np.zeros( ( n, n ) ), tc = "d" )
+  q = cvxopt.matrix( np.zeros( n ), tc = "d" )
   for i in xrange( len( w ) ):
     p[i, i] = 1.0
-  a = cvxopt.matrix( np.zeros( ( 1, n ) ) )
+  a = cvxopt.matrix( np.zeros( ( 1, n ) ), tc = "d" )
   for i in xrange( len( w ), n ):
     a[0, i] = 1
-  b = cvxopt.matrix( np.ones( 1 ) )
-  g = cvxopt.matrix( np.zeros( ( n + len( w ), n ) ) )
+  b = cvxopt.matrix( np.ones( 1 ), tc = "d" )
+  g = cvxopt.matrix( np.zeros( ( n + len( w ), n ) ), tc = "d" )
   for i in xrange( n ):
     g[i, i] = 1
   for i in xrange( len( w ) ):
     g[n + i, i] = 1
-    for j in xrange( j + 1 ):
-      g[n + i, len( w ) + j] = -mu_planned[j][i]
-  h = cvxopt.matrix( np.zeros( n + len( w ) ) )
+    for tj in xrange( j + 1 ):
+      g[n + i, len( w ) + tj] = mu_planned[tj][i] #Why does this not work with negative?
+  h = cvxopt.matrix( np.zeros( n + len( w ) ), tc = "d" )
   for i in xrange( len( w ) ):
-    h[n + i] = mu_observed[i]
+    h[n + i] = -mu_observed[i]
   solvers.options["maxiters"] = 20
   solvers.options["show_progress"] = False
-  result = solvers.qp( p, q, - g, h, a, b, "glpk" )
+  result = solvers.qp( p, q, - g, -h, a, b, "glpk" )
   r_w = w * 0.
   for i in xrange( len( w ) ):
     r_w[i] = result["x"][i]
@@ -171,3 +157,4 @@ def optimize(  j, w, mu_planned, mu_observed ):
   for i in xrange( j + 1 ):
     r_x[i] = result["x"][len( w ) + i]
   return r_w, r_x
+

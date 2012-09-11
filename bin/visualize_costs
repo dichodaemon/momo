@@ -26,8 +26,16 @@ def plot_cost( pos, angle, cost, convert, vmin, vmax ):
 
 data     = momo.read_data( "data/filtered/%s.txt" % sys.argv[1] )
 
-theta = np.random.rand( 18 ).astype( np.float32 )
-theta /= np.linalg.norm( theta )
+start_path = "data/models/%s/%s" % ( sys.argv[2], sys.argv[3] )
+output_name = "%s/%s.txt" % ( start_path, sys.argv[1] )
+
+cost_function = momo.cost_functions.__dict__[sys.argv[3]]
+cost_function = cost_function.load( open( output_name ) )
+
+#theta = np.random.rand( 18 ).astype( np.float32 )
+#theta /= np.linalg.norm( theta )
+
+theta = cost_function.theta
 
 #Used to estimate the max and min grid values
 ts = sorted( theta )

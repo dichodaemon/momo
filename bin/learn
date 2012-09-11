@@ -17,8 +17,6 @@ def learn( name, cost_function ):
   cost_function.save( f )
   f.close()
 
-random.seed( 0 )
-
 data = momo.read_data( "data/filtered/%s.txt" % sys.argv[1] )
 
 features = momo.irl.features.__dict__[sys.argv[2]] 
