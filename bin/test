@@ -12,29 +12,85 @@ import time
 import pylab as pl
 import numpy as np
 import momo
+import random
 from optparse import OptionParser
 
 def list_callback( option, opt_str, value, parser ):
   setattr( parser.values, option.dest, [int( v ) for v in value.split( "," )] )
 
-def plot_paths( convert, observed, planned ):
-  pl.figure( 1, figsize = ( 30, 10 ), dpi = 75 )
+def configure_figure( convert ):
+  #pl.figure( 1, figsize = ( 30, 10 ), dpi = 75 )
   pl.clf()
   pl.axis( "scaled" )
   pl.xlim( convert.x, convert.x2 )
   pl.ylim( convert.y, convert.y2 )
+
+def plot_path( path, format ):
   pl.plot( 
-    [ v[0] for v in observed[:]],
-    [ v[1] for v in observed[:]],
-    "r."
+    [ v[0] for v in path[:]],
+    [ v[1] for v in path[:]],
+    format
   )
 
-  pl.plot( 
-    [ v[0] for v in planned[:]],
-    [ v[1] for v in planned[:]],
-    "b."
-  )
-  pl.show()
+def obstruction( agent, other ):
+  a_v = agent[2:] / np.linalg.norm( agent[2:] )
+  o_v = other[2:] / np.linalg.norm( other[2:] )
+  angle = np.dot( a_v, o_v )
+  if angle < 0:
+    p_x = agent[:2] - other[:2]
+    p_v = p_x / np.linalg.norm( p_x )
+    if np.linalg.norm( p_x ) < 1: # Obstruction distance
+      cone_angle = np.dot( o_v, p_v )
+      if cone_angle > 0.866: #60 degree range
+        return True
+  else:
+    p_x = other[:2] - agent[:2]
+    p_v = p_x / np.linalg.norm( p_x )
+    if np.linalg.norm( p_x ) < 1: # Obstruction distance
+      cone_angle = np.dot( o_v, p_v )
+      if cone_angle > 0.866: #60 degree range
+        return True
+  return False
+
+def count_obstructions( path, frames ):
+  result = 0
+  for i in xrange( len( path ) ):
+    for o in frames[i]:
+      if obstruction( path[i], o ):
+        result += 1
+  return result
+
+def make_video( convert, path, frames, filename ):
+  if not os.path.exists( "%s/%s" % ( output_path, filename ) ):
+    os.makedirs( "%s/%s" % ( output_path, filename ) )
+  os.system( "rm %s/%s/video_*.png" % ( output_path, filename ) )
+  for i in xrange( len( path ) ):
+    configure_figure( convert )
+    obstructed = []
+    non_obstructed = []
+    for o in frames[i]:
+      if obstruction( path[i], o ):
+        obstructed.append( o )
+      else:
+        non_obstructed.append( o )
+    if len( obstructed ) > 0:
+      pl.plot( [path[i][0]], [path[i][1]], "rx" )
+    else:
+      pl.plot( [path[i][0]], [path[i][1]], "gx" )
+    pl.plot( 
+      [v[0] for v in obstructed],
+      [v[1] for v in obstructed],
+      "ro"
+    )
+    pl.plot( 
+      [v[0] for v in non_obstructed],
+      [v[1] for v in non_obstructed],
+      "bo"
+    )
+    pl.savefig( "%s/%s/video_%05i.png" % ( output_path, filename, i ) )
+  os.system( "avconv -y -f image2 -r 5 -i %s/%s/video_%%05d.png %s/%s.mp4" % ( output_path, filename, output_path, filename ) )
+    
+
 
 # Process command line
 parser = OptionParser( usage = "usage: %prog [options] dataset algorithm velocity [params...]" )
@@ -50,6 +106,18 @@ parser.add_option(
   "--velocity", help = "Simulated object velocity", type = "float", 
   dest = "velocity", default = 0.02
 )
+parser.add_option( 
+  "--num_random", help = "Number of random paths to sample", type = "int", 
+  dest = "num_random", default = 10
+)
+parser.add_option( 
+  "--start_frame", help = "Start frame for random paths", type = "int", 
+  dest = "start_frame", default = 100
+)
+parser.add_option( 
+  "--frame_skip", help = "Frame skip for random paths", type = "int", 
+  dest = "frame_skip", default = 1
+)
 
 options, args = parser.parse_args()
 
@@ -64,6 +132,9 @@ algorithm_args = args[2:]
 delta = options.delta
 ids  = options.ids
 velocity = options.velocity
+num_random = options.num_random
+start_frame = options.start_frame
+frame_skip = options.frame_skip
 
 # Prepare file paths
 start_path = "data/models/%s" % dataset 
@@ -72,6 +143,15 @@ input_name = "%s/%s" % ( start_path, algorithm_name )
 if len( algorithm_args ) > 0:
   input_name += "-%s" % "_".join( algorithm_args )
 input_name += ".txt"
+
+output_path = "experiments/%s/%s" % ( dataset, algorithm_name )
+if len( algorithm_args ) > 0:
+  output_path += "-%s" % "_".join( algorithm_args )
+
+if not os.path.exists( output_path ):
+  os.makedirs( output_path )
+
+
 
 # Perform tests
 
@@ -96,6 +176,8 @@ mu_observed = {}
 mu_planned  = {}
 all_observed = {}
 all_planned = {}
+observed_obstructions = {}
+planned_obstructions = {}
 
 for o_id in ids:
   states = frame_data[o_id]["states"]
@@ -113,21 +195,64 @@ for o_id in ids:
 
   all_observed[o_id] = states
   all_planned[o_id] = planned
+  observed_obstructions[o_id] = count_obstructions( states, frames )
+  planned_obstructions[o_id] = count_obstructions( planned, frames )
 
 # Random tests
 
+random.seed( 5 )
+frames = [np.array( [d[3:] for d in f], dtype = np.float32 ) for f in momo.frames( data )]
+random_frames = [
+  frames[start_frame + frame_skip * i] for i in xrange( len( frames[start_frame:] ) / frame_skip )
+]
+random_paths  = []
+random_obstructions = []
 for i in xrange( num_random ):
-  start = convert.random_world()
-  goal  = convert.random_world()
-  planned = algorithm.plan( start, goal, velocity, frames[start_frame], replan = 1 )
+  max_dist = 0
+  start = convert.random_world2()
+  goal  = convert.random_world2()
+  for j in xrange( 30 ):
+    s = convert.random_world2()
+    g = convert.random_world2()
+    dist = np.linalg.norm( s - g )
+    if dist > max_dist:
+      max_dist = dist
+      start = s
+      goal = g
+  planned = algorithm.plan( start, goal, velocity, random_frames, replan = 1 )
+  random_paths.append( planned )
+  random_obstructions.append( count_obstructions( planned, random_frames ) )
+
+
+# Output Images
+for o_id in ids:
+  configure_figure( convert )
+  plot_path( all_observed[o_id], "r." )
+  plot_path( all_planned[o_id], "b." )
+  pl.savefig( "%s/path_%i.eps" % ( output_path, o_id ) )
+  pl.savefig( "%s/path_%i.png" % ( output_path, o_id ) )
+  make_video( convert, all_observed[o_id], frame_data[o_id]["frames"], "observed_%i" % o_id )
+  make_video( convert, all_planned[o_id], frame_data[o_id]["frames"], "planned_%i" % o_id )
+
+
+for i in xrange( num_random ):
+  configure_figure( convert )
+  plot_path( random_paths[i], "b." )
+  pl.savefig( "%s/rpath_%i.eps" % ( output_path, i ) )
+  pl.savefig( "%s/rpath_%i.png" % ( output_path, i ) )
+  make_video( convert, random_paths[i], random_frames, "rpath_%i" % i )
+
+# Output results
 
 observed = np.sum( mu_observed.values(), 0 ) / len( mu_observed.values() )
 planned  = np.sum( mu_planned.values(), 0 ) / len( mu_planned.values() )
-print "Feature difference:", np.linalg.norm( observed - planned )
 
-for o_id in ids:
-  plot_paths( convert, all_observed[o_id], all_planned[o_id] )
-
-  
-
-
+f = open( "%s/results.txt" % output_path, "w" )
+f.write( "Demonstrated behavior:\n" )
+f.write( "- feature difference: %f\n" % np.linalg.norm( observed - planned ) )
+f.write( "- observed obstructions: %i\n" % sum( observed_obstructions.values() ) )
+f.write( "- planned obstructions: %i\n" % sum( planned_obstructions.values() ) )
+f.write( "Random behavior:\n" )
+f.write( "- obstructions: %i\n" % sum( random_obstructions ) )
+f.write( "- path length: %i\n" % sum( [len( p ) for p in random_paths] ) )
+f.close()

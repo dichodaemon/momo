@@ -1,6 +1,7 @@
 import numpy as np
 import momo
 from math import *
+import random
 
 ANGLES     = [0, pi / 4, pi / 2, 3 * pi / 4, pi, -3 * pi / 4, -pi / 2, -pi / 4]
 
@@ -53,6 +54,18 @@ class convert( object ):
   def to_world2( self, v, speed = 1.0 ):
     r = self.to_world( v )
     return np.array( [r[0], r[1], cos( r[2] ) * speed, sin( r[2] ) * speed], dtype = np.float32 )
+
+  def random_world2( self ):
+    return self.to_world2( self.random() )
+
+  def random_world( self ):
+    return self.to_world( self.random() )
+  
+  def random( self ):
+    x = random.randint( 3, self.grid_width - 4 )
+    y = random.randint( 3, self.grid_height - 4 )
+    k = random.randint( 0, 7 )
+    return np.array( [x, y, k], dtype = np.int32 )
     
   def preprocess_data( self, data ):
     frame_data = {}
