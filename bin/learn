@@ -11,26 +11,51 @@ sys.path.append( path )
 import momo
 import random
 import numpy as np
+from optparse import OptionParser
 
-def learn( name, cost_function ):
-  f = open( name, "w" )
-  cost_function.save( f )
-  f.close()
+def list_callback( option, opt_str, value, parser ):
+  setattr( parser.values, option.dest, [int( v ) for v in value.split( "," )] )
 
-data = momo.read_data( "data/filtered/%s.txt" % sys.argv[1] )
+# Process command line
+parser = OptionParser( usage = "usage: %prog [options] dataset algorithm [params...]" )
+parser.add_option( 
+  "--ids", help = "Trajectory ids to learn from", type = "string", 
+  action = "callback", dest = "ids", callback = list_callback, default = []
+)
+parser.add_option( 
+  "--delta", help = "Grid resolution", type = "float", 
+  dest = "delta", default = 0.25
+)
 
-features = momo.irl.features.__dict__[sys.argv[2]] 
-cost_function = momo.cost_functions.__dict__[sys.argv[3]]
+options, args = parser.parse_args()
 
-start_path = "data/models/%s/%s" % ( sys.argv[2], sys.argv[3] )
+if len( args ) < 2:
+  parser.error( "Incorrect number of arguments" )
+  exit( 1 )
+
+dataset        = args[0]
+algorithm_name = args[1]
+algorithm_args = args[2:]
+
+delta = options.delta
+ids  = options.ids
+
+# Prepare file paths
+start_path = "data/models/%s" % dataset 
 if not os.path.exists( start_path ):
   os.makedirs( start_path )
 
-output_name = "%s/%s.txt" % ( start_path, sys.argv[1] )
+output_name  = "%s/%s" % ( start_path, algorithm_name )
+if len( algorithm_args ) > 0:
+  output_name += "-%s" % "_".join( algorithm_args )
+output_name += ".txt"
 
-cf = cost_function( features, data )
-learn( 
-  output_name,
-  cf
-)
+# Perform learning
+data      = momo.read_data( "data/filtered/%s.txt" % dataset )
+algorithm = momo.cost_functions.__dict__[algorithm_name]
+
+a = algorithm( data, ids, delta, algorithm_args )
+f = open( output_name, "w" )
+a.save( f )
+f.close()
 
