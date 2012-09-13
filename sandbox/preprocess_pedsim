@@ -25,7 +25,7 @@ def read_data( filename ):
   f.close()
   return data
 
-data = [d for d in read_data( sys.argv[1] ) if abs( d[3] ) <= 18 and abs( d[4] ) <= 3]
+data = [d for d in read_data( sys.argv[1] ) if abs( d[3] ) <= 19 and abs( d[4] ) <= 20]
 
 lastid = 0
 ids  = {}

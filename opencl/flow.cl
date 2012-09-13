@@ -74,3 +74,4 @@ __kernel void computeCosts(
   }
   costs[direction * width * height + row * width + column] = cost;
 }
+

@@ -21,4 +21,4 @@ ANGLES = np.array( [
   [cos( 7 * pi / 8 ), sin( 7 * pi / 8 )],
 ], dtype = np.float32 )
 
-SPEEDS = np.array( [0., 0.02, 0.08], dtype = np.float32 )
+SPEEDS = np.array( [0., 0.015, 0.03], dtype = np.float32 )

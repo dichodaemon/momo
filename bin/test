@@ -205,20 +205,26 @@ frames = [np.array( [d[3:] for d in f], dtype = np.float32 ) for f in momo.frame
 random_frames = [
   frames[start_frame + frame_skip * i] for i in xrange( len( frames[start_frame:] ) / frame_skip )
 ]
+start = None
+goal = None
 random_paths  = []
 random_obstructions = []
 for i in xrange( num_random ):
-  max_dist = 0
-  start = convert.random_world2()
-  goal  = convert.random_world2()
-  for j in xrange( 30 ):
-    s = convert.random_world2()
-    g = convert.random_world2()
-    dist = np.linalg.norm( s - g )
-    if dist > max_dist:
-      max_dist = dist
-      start = s
-      goal = g
+  if start == None:
+    start = np.array( [-10, 1.8, 0, velocity] )
+    goal  = np.array( [10, 1.8, 0, -velocity] )
+  else:
+    max_dist = 0
+    start = convert.random_world2()
+    goal  = convert.random_world2()
+    for j in xrange( 30 ):
+      s = convert.random_world2()
+      g = convert.random_world2()
+      dist = np.linalg.norm( s - g )
+      if dist > max_dist:
+        max_dist = dist
+        start = s
+        goal = g
   planned = algorithm.plan( start, goal, velocity, random_frames, replan = 1 )
   random_paths.append( planned )
   random_obstructions.append( count_obstructions( planned, random_frames ) )

@@ -1,4 +1,5 @@
 TODO
 ====
 
-  * Deal with velocity in bin/test
+  * Check goal orientation
+  * Check world2 orientation cw/ccw
