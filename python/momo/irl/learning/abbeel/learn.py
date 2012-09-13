@@ -7,7 +7,7 @@ import cvxopt
 from cvxopt import solvers
 from math import *
 
-def learn( feature_module, convert, frame_data, ids, radius ):
+def learn( feature_module, convert, planner, frame_data, ids, radius, replan ):
   feature_length = feature_module.FEATURE_LENGTH
 
   # Initialize weight vector
@@ -33,7 +33,7 @@ def learn( feature_module, convert, frame_data, ids, radius ):
   for reps in xrange( 18 ):
     temp_sum = w * 0.
     for o_id in ids:
-      val = compute_plan_features( feature_module, convert, w, frame_data[o_id], radius )
+      val = compute_plan_features( feature_module, convert, planner, w, frame_data[o_id], radius, replan )
       temp_sum += val
 
     mu_planned.append( temp_sum )
@@ -51,75 +51,41 @@ def learn( feature_module, convert, frame_data, ids, radius ):
   return w
 
 
-def compute_plan_features( feature_module, convert, w, data, radius ):
-  compute_costs = momo.irl.features.flow.compute_costs( convert, radius )
-  plan = momo.planning.dijkstra()
-
+def compute_plan_features( feature_module, convert, planner, w, data, radius, replan ):
   states = data["states"]
   frames = data["frames"]
-  start = states[0]
-  goal = states[-1]
-  goal = convert.from_world2( goal )
-  current = convert.from_world2( start )
-  traversed = []
-  count = 0
 
-  result = None
+  velocities = [np.linalg.norm( v[2:] ) for v in states]
+  avg_velocity = np.sum( velocities, 0 ) / len( velocities )
+
+  path   = planner( states[0], states[-1], avg_velocity, frames, replan, w )
+  result = np.sum( 
+    [
+      feature_module.compute_feature( 
+        path[i], frames[min( i, len( frames ) )], radius 
+      ) 
+      for i in xrange( len( path ) )
+    ], 
+    0 
+  )
 
   if True:
     pl.figure( 1, figsize = ( 30, 10 ), dpi = 75 )
     pl.ion()
-
-  while True:
-    if count >= len( states ):
-      count = len( states ) - 1
-    velocity = np.linalg.norm( states[count][2:] )
-    costs = compute_costs( velocity, w, frames[count] )
-
-    cummulated, parents = plan( costs, goal )
-    path = plan.get_path( parents, current )
-
-
-    traversed.append( path[0] )
-    current = path[1]
-    converted = convert.to_world2( current, velocity )
-    
-    if result == None:
-      result  = feature_module.compute_feature( converted, frames[count] )
-    else:
-      result += feature_module.compute_feature( converted, frames[count] )
-
-    if path.shape[0] == 2:
-      break
-
-    count += 1
-
-  if True:
     pl.clf()
     pl.axis( "scaled" )
     pl.xlim( convert.x, convert.x2 )
     pl.ylim( convert.y, convert.y2 )
-    pl.imshow( cummulated[0], pl.cm.jet, None, None, "none", 
-      origin = "upper", extent = (convert.x, convert.x2, convert.y, convert.y2), 
-      vmin = 0, vmax = 100
-    )
-
     pl.plot( 
       [ v[0] for v in states[:]],
       [ v[1] for v in states[:]],
-      "w."
+      "r."
     )
 
     pl.plot( 
-      [ convert.to_world( v )[0] for v in traversed[:]],
-      [ convert.to_world( v )[1] for v in traversed[:]],
-      "c."
-    )
-
-    pl.plot( 
-      [ convert.to_world( v )[0] for v in path[:]],
-      [ convert.to_world( v )[1] for v in path[:]],
-      "m."
+      [ v[0] for v in path[:]],
+      [ v[1] for v in path[:]],
+      "b."
     )
 
     pl.draw()

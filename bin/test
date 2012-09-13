@@ -104,11 +104,11 @@ parser.add_option(
 )
 parser.add_option( 
   "--velocity", help = "Simulated object velocity", type = "float", 
-  dest = "velocity", default = 0.02
+  dest = "velocity", default = 0.04
 )
 parser.add_option( 
   "--num_random", help = "Number of random paths to sample", type = "int", 
-  dest = "num_random", default = 10
+  dest = "num_random", default = 5
 )
 parser.add_option( 
   "--start_frame", help = "Start frame for random paths", type = "int", 
@@ -156,7 +156,7 @@ if not os.path.exists( output_path ):
 # Perform tests
 
 data      = momo.read_data( "data/filtered/%s.txt" % dataset )
-algorithm = momo.cost_functions.__dict__[algorithm_name]
+algorithm = momo.algorithms.__dict__[algorithm_name]
 
 algorithm = algorithm.load( open( input_name ) )
 
@@ -255,4 +255,19 @@ f.write( "- planned obstructions: %i\n" % sum( planned_obstructions.values() ) )
 f.write( "Random behavior:\n" )
 f.write( "- obstructions: %i\n" % sum( random_obstructions ) )
 f.write( "- path length: %i\n" % sum( [len( p ) for p in random_paths] ) )
+f.write( "\nDetail (demonstrated)\n" )
+for o_id in ids:
+  f.write( "Path %i\n" % o_id )
+  f.write( 
+    "- feature difference: %f\n" % 
+    np.linalg.norm( mu_observed[o_id] / len( mu_observed[o_id] ) - mu_planned[o_id] / len( mu_planned[o_id] ) ) 
+  )
+  f.write( "- observed obstructions: %i\n" % observed_obstructions[o_id] )
+  f.write( "- planned obstructions: %i\n" % planned_obstructions[o_id] )
+
+f.write( "\nDetail (random)\n" )
+for i in xrange( len( random_paths ) ):
+  f.write( "Path %i\n" % i )
+  f.write( "- obstructions: %i\n" % random_obstructions[i] )
+  f.write( "- path length: %i\n" % len( random_paths[i] ) )
 f.close()

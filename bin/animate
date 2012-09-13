@@ -35,13 +35,10 @@ def animate( x1, y1, width, height, data ):
       o_y  = o[4]
       o_dx = o[5]
       o_dy = o[6]
-      if not o_id in x:
-        x[o_id] = []
-        y[o_id] = []
-      x[o_id].append( o_x )
-      y[o_id].append( o_y )
+      x[o_id] = o_x
+      y[o_id] = o_y
     for o_id in x.keys():
-      pl.plot( x[o_id], y[o_id], 'b.', markersize = 10 )
+      pl.plot( [x[o_id]], [y[o_id]], 'b.', markersize = 10 )
       if o[0] == ends[o_id]:
         del x[o_id]
         del y[o_id]

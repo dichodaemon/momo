@@ -52,9 +52,9 @@ output_name += ".txt"
 
 # Perform learning
 data      = momo.read_data( "data/filtered/%s.txt" % dataset )
-algorithm = momo.cost_functions.__dict__[algorithm_name]
+algorithm = momo.algorithms.__dict__[algorithm_name]
 
-a = algorithm( data, ids, delta, algorithm_args )
+a = algorithm( *algorithm_args, data = data, ids = ids, delta = delta )
 f = open( output_name, "w" )
 a.save( f )
 f.close()
