@@ -25,7 +25,7 @@ class irl( object ):
       ids = range( l, l + 5 )
 
     self.theta = self.__learn( 
-      self.features, self.__convert, self.planner, frame_data, ids, 
+      self.features, self.__convert, frame_data, ids, 
       radius = self.radius, replan = self.replan
     )
 

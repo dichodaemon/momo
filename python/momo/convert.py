@@ -21,7 +21,10 @@ class convert( object ):
     self.y2 = self.y + self.height
 
   def rebase_frame( self, frame ):
-    return ( frame[:] - np.array( [self.x, self.y, 0, 0] ) ).astype( np.float32 )
+    origin = self.to_world2( np.array( [0, 0, 0] ) )
+    end = self.to_world2( np.array( [0, 1, 0] ) )
+    origin[2:] *= 0
+    return ( frame[:] - origin ).astype( np.float32 )
   
   def from_world( self, v ):
     angle = v[2]
@@ -39,7 +42,7 @@ class convert( object ):
         dist = d
     return np.array( [
       int( round( ( v[0] - self.x ) / self.delta ) - 0.5 ),\
-      int( round( ( self.y2 - v[1] ) / self.delta ) - 0.5 ), k
+      int( round( ( v[1] - self.y ) / self.delta ) - 0.5 ), k
     ], dtype = np.int32 )
 
   def from_world2( self, v ):
@@ -48,7 +51,9 @@ class convert( object ):
 
   def to_world( self, v ):
     return np.array( [
-      self.x + self.delta * ( v[0] + 0.5 ), self.y + self.height - self.delta * ( v[1] + 0.5 ), ANGLES[v[2]]
+      self.x + self.delta * ( v[0] + 0.5 ), 
+      self.y + self.delta * ( v[1] + 0.5 ), 
+      ANGLES[v[2]]
     ], dtype = np.float32 )
 
   def to_world2( self, v, speed = 1.0 ):

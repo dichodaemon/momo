@@ -36,7 +36,7 @@ def compute_feature( reference, frame, radius = 3 ):
     speed = np.linalg.norm( avg_velocity )
     speed_index = 0;
     for i in xrange( 3 ):
-      if speed > SPEEDS[i]:
+      if speed >= SPEEDS[i]:
        speed_index = i
     feature[4 + angle_index * 3 + speed_index] = 1
   feature[17] = 1

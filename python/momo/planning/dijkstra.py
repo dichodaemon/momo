@@ -1,6 +1,7 @@
 import pyopencl as cl
 import numpy as np
 from math import *
+from __common__ import *
 import momo
 
 class dijkstra( momo.opencl.Program ):
@@ -9,7 +10,7 @@ class dijkstra( momo.opencl.Program ):
     self.dijkstra = self.loadProgram( momo.BASE_DIR + "/opencl/dijkstra.cl" )
 
     mf = cl.mem_flags
-    self.idirection_buffer = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = momo.irl.features.flow.DIRECTIONS.astype( np.int32 ) )
+    self.idirection_buffer = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = DIRECTIONS )
 
   def __call__( self, costs, goal ):
     if ( costs < 0 ).any():

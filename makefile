@@ -14,7 +14,8 @@ all: learn test
 	#bin/learn crossing irl abbeel 3 1000 --ids 90,91,92,93 --delta 0.25
 
 test:
-	bin/test long irl abbeel 3 1000 --ids 503 --delta 0.25 --velocity 0.024 --num_random 1 --frame_skip 3 --start_frame 100
+	#bin/test long_sparse irl abbeel 3 1 --ids 63 --delta 0.25 --velocity 0.024 --num_random 1 --frame_skip 3 --start_frame 100
 
 learn:
-	bin/learn long irl abbeel 3 1000 --ids 500,501,502 --delta 0.25
+	#bin/learn long_sparse irl abbeel 3 1 --ids 60,61,62 --delta 0.25
+	bin/learn long_sparse irl henry 3 1 --ids 60,61,62 --delta 0.25

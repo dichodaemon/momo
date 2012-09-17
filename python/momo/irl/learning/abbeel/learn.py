@@ -7,8 +7,11 @@ import cvxopt
 from cvxopt import solvers
 from math import *
 
-def learn( feature_module, convert, planner, frame_data, ids, radius, replan ):
+def learn( feature_module, convert, frame_data, ids, radius, replan ):
   feature_length = feature_module.FEATURE_LENGTH
+
+  compute_costs = feature_module.compute_costs( convert, radius )
+  planner = momo.irl.planning.dijkstra( convert, compute_costs )
 
   # Initialize weight vector
   w  = np.random.rand( feature_length )

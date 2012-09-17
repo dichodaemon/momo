@@ -75,3 +75,28 @@ __kernel void computeCosts(
   costs[direction * width * height + row * width + column] = cost;
 }
 
+__kernel void computeFeatures( 
+  float speed, float delta, float radius, 
+  uint width, uint height, uint featureLength,
+  uint frameSize, __constant float4 * frame, 
+  __constant float2 * directions, __constant float2 * angles, __constant float * speeds, 
+  __global float * features
+) {
+  unsigned int direction = get_global_id( 0 );
+  unsigned int row       = get_global_id( 1 );
+  unsigned int column    = get_global_id( 2 );
+
+  float2 position = (float2)( column * delta, row * delta );
+  float2 velocity = directions[direction] * speed;
+  float f[18];
+  
+  computeFeature( position, velocity, radius, frameSize, frame, angles, speeds, f );
+
+  int base =  direction * width * height * featureLength 
+            + row * width * featureLength
+            + column * featureLength;
+             
+  for ( int i = 0; i < featureLength; i++ ) {
+    features[base + i] = f[i];
+  }
+}

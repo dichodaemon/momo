@@ -14,6 +14,9 @@ DIRECTIONS = np.array( [
   [ 1., -1.]
 ], dtype = np.float32 )
 
+for i in xrange( DIRECTIONS.shape[0] ):
+  DIRECTIONS[i] /= np.linalg.norm( DIRECTIONS[i] )
+
 ANGLES = np.array( [
   [cos( pi / 8 ), sin( pi / 8 )],
   [cos( 3 * pi / 8 ), sin( 3 * pi / 8 )],
