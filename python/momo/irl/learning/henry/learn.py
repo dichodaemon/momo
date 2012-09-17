@@ -1,5 +1,7 @@
 import numpy as np
+import pylab as pl
 import momo
+from math import *
 
 def learn( feature_module, convert, frame_data, ids, radius, replan ):
   feature_length = feature_module.FEATURE_LENGTH
@@ -10,16 +12,27 @@ def learn( feature_module, convert, frame_data, ids, radius, replan ):
 
   # Initialize weight vector
   w  = np.random.rand( feature_length )
-  w /= np.linalg.norm( w )
 
+  gamma = 1.0
   for o_id in ids:
-    gradient = compute_gradient( 
-      feature_module, planner, convert, compute_features,
-      frame_data[o_id]["states"], frame_data[o_id]["frames"],
-      w, replan
-    )
-    for i in xrange( feature_length ):
-      w[i] *= exp( -gamma * gradient[i] )
+    w /= np.linalg.norm( w )
+    for i in xrange( 100 ):
+      gradient = compute_gradient( 
+        feature_module, planner, convert, compute_features,
+        frame_data[o_id]["states"], frame_data[o_id]["frames"],
+        w, replan
+      )
+      if np.any( np.isnan( gradient ) ):
+        print "w, nan", w
+        break
+      for i in xrange( feature_length ):
+        w[i] *= exp( -gamma * gradient[i] )
+      gamma *= 0.999
+      magnitude = np.linalg.norm( gradient )
+      print "gradient", magnitude
+      print gamma
+      if magnitude < 0.05:
+        break
 
   return w
 
@@ -29,35 +42,40 @@ def compute_gradient( feature_module, planner, convert, compute_features, states
     [convert.to_world2( convert.from_world2( s ), np.linalg.norm( s[2:] ) ) for s in states], 
     frames 
   )
+  mu_observed /= np.sum( mu_observed[:4] )
 
   velocities = [np.linalg.norm( v[2:] ) for v in states]
   avg_velocity = np.sum( velocities, 0 ) / len( velocities )
 
-  forward, backward, costs = planner( states[0], states[-1], avg_velocity, frames[0], w )
+  pl.figure( 0 )
+  pl.ion()
+  forward, backward, costs = planner( states[0], states[-1], avg_velocity, frames[0], w  * 2 )
   features = compute_features( avg_velocity, frames[0] )
 
   mu_expected = np.zeros( feature_module.FEATURE_LENGTH )
-  
+  tmp = forward * 0.
+
   for d in xrange( forward.shape[0] ):
     for y in xrange( forward.shape[1] ):
       for x in xrange( forward.shape[2] ):
-        for d1 in xrange( d - 1, d + 2 ):
-          if d1 > 7:
-            d1 -= 4
-          elif d1 < 0:
-            d1 += 4
+        #tmp[d, y, x] = forward[d, y, x] * exp( -np.dot( w, features[d, y, x] ) ) * backward[d, y, x] 
+        tmp[d, y, x] = forward[d, y, x] * exp( -costs[d, y, x] ) * backward[d, y, x] 
+  for d in xrange( forward.shape[0] ):
+    for y in xrange( forward.shape[1] ):
+      for x in xrange( forward.shape[2] ):
+        mu_expected += features[d, y, x] * tmp[d, y, x]
+  mu_expected /= np.sum( mu_expected[:4] )
 
-          x1 = x + feature_module.DIRECTIONS[d1][0]
-          y1 = y + feature_module.DIRECTIONS[d1][1]
-          
-          #if x1 >= 0 and x1 < forward.shape[2] and y1 >= 0 and y1 < forward.shape[1]:
-            #mu_expected += features[d1, y1, x1] * forward[d, y, x] * costs[d1, y1, x1] * backward[d1, y1, x1]  
+  pl.figure( 1 )
+  pl.ion()
+  pl.clf()
+  pl.imshow( np.sum( tmp, 0 ) )
+  pl.draw()
+  np.set_printoptions( precision = 3 )
+  np.set_printoptions( suppress = True )
+  print "mu_observed", mu_observed
+  print "mu_expected", mu_expected
 
-  start = convert.from_world2( states[0] )
-  goal  = convert.from_world2( states[-1] )
-
-  print "forward", forward[tuple( reversed( goal.tolist() ) )]
-  print "backward", backward[tuple( reversed( start.tolist() ) )]
 
   return mu_observed - mu_expected
 

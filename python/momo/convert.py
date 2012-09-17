@@ -22,7 +22,6 @@ class convert( object ):
 
   def rebase_frame( self, frame ):
     origin = self.to_world2( np.array( [0, 0, 0] ) )
-    end = self.to_world2( np.array( [0, 1, 0] ) )
     origin[2:] *= 0
     return ( frame[:] - origin ).astype( np.float32 )
   
