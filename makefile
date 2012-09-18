@@ -18,4 +18,4 @@ test:
 
 learn:
 	#bin/learn long_sparse irl abbeel 3 1 --ids 60,61,62 --delta 0.25
-	bin/learn long_sparse irl henry 3 1 --ids 60,61,62 --delta 0.25
+	bin/learn long_sparse irl henry 3 10 --ids 60,61,62 --delta 0.25

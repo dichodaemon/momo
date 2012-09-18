@@ -6,4 +6,5 @@ import algorithms
 import tracking
 import planning
 import irl
+import plot
 from convert import *

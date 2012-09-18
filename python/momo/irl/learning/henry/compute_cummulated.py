@@ -13,7 +13,7 @@ class compute_cummulated( momo.opencl.Program ):
     self.idirection_buffer = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = momo.planning.DIRECTIONS )
 
 
-  def __call__( self, forward, backward, costs, features ):
+  def __call__( self, forward, backward, costs, features, origin, h ):
     mf = cl.mem_flags
 
     w_features = features.astype( np.float64 )
@@ -24,10 +24,12 @@ class compute_cummulated( momo.opencl.Program ):
     cost_buffer     = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = costs )
     cumm_buffer     = cl.Buffer( self.context, mf.READ_WRITE, costs.nbytes )
     feature_buffer  = cl.Buffer( self.context, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf = w_features )
+    origin_buffer   = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = origin )
 
     self.henryCummulated.cummulated1( 
       self.queue, costs.shape, None, 
       np.int32( w_features.shape[2] ), np.int32( w_features.shape[1] ),
+      origin_buffer, np.int32( h ),
       self.idirection_buffer,
       forward_buffer, backward_buffer, cost_buffer, cumm_buffer
     )

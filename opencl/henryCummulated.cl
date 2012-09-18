@@ -4,6 +4,7 @@
 
 __kernel void cummulated1(
   uint width, uint height,
+  __constant int2 * origin, uint h, 
   __constant int2 * directions, 
   __global double * forward,
   __global double * backward,
@@ -18,21 +19,26 @@ __kernel void cummulated1(
 
   double value = 0;
 
-  for ( int d = direction - 1; d < direction + 2; d++ ) {
-    int d_forward = d;
-    if ( d_forward < 0 ) {
-      d_forward += 8;
-    } else if ( d_forward > 7 ) {
-      d_forward -= 8;
-    }
-    int2 delta = directions[direction];
+  int dx = origin->x - column;
+  int dy = origin->y - row;
 
-    // Update this state
-    int c = column - delta.x;
-    int r = row - delta.y;
-    if ( c >= 0 && c < width && r >= 0 && r < height ) {
-      int priorIndex = d_forward * width * height + r * width + c;
-      value += forward[priorIndex] * t_exp( -costs[stateIndex] ) * backward[stateIndex];
+  if ( dx * dx + dy * dy <= h * h ) {
+    for ( int d = direction - 1; d < direction + 2; d++ ) {
+      int d_forward = d;
+      if ( d_forward < 0 ) {
+        d_forward += 8;
+      } else if ( d_forward > 7 ) {
+        d_forward -= 8;
+      }
+      int2 delta = directions[direction];
+
+      // Update this state
+      int c = column - delta.x;
+      int r = row - delta.y;
+      if ( c >= 0 && c < width && r >= 0 && r < height ) {
+        int priorIndex = d_forward * width * height + r * width + c;
+        value += forward[priorIndex] * t_exp( -costs[stateIndex] ) * backward[stateIndex];
+      }
     }
   }
   cummulated[stateIndex] = value;

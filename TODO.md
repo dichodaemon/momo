@@ -2,6 +2,7 @@ TODO
 ====
 
   * Integral images for feature expectation in Henry (GPU)
+  * Check consequences of stopping using DIRECTIONS with real length
 
 DONE
 ====

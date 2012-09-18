@@ -64,15 +64,17 @@ __kernel void computeCosts(
   unsigned int row       = get_global_id( 1 );
   unsigned int column    = get_global_id( 2 );
 
+  float2 dir = directions[direction];
+  float l = length( dir );
   float2 position = (float2)( column * delta, row * delta );
-  float2 velocity = directions[direction] * speed;
+  float2 velocity = dir * speed / l;
   float f[18];
   
   computeFeature( position, velocity, radius, frameSize, frame, angles, speeds, f );
 
-  float cost = 0;
+  double cost = 0;
   for ( int i = 0; i < 18; i++ ) {
-    cost += f[i] * theta[i];// * length( directions[direction] );
+    cost += f[i] * theta[i] * l;
   }
   costs[direction * width * height + row * width + column] = cost;
 }
@@ -88,8 +90,10 @@ __kernel void computeFeatures(
   unsigned int row       = get_global_id( 1 );
   unsigned int column    = get_global_id( 2 );
 
+  float2 dir = directions[direction];
+  float l = length( dir );
   float2 position = (float2)( column * delta, row * delta );
-  float2 velocity = directions[direction] * speed;
+  float2 velocity = dir * speed / l;
   float f[18];
   
   computeFeature( position, velocity, radius, frameSize, frame, angles, speeds, f );

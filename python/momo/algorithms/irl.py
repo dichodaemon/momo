@@ -4,12 +4,12 @@ import cPickle
 from math import *
 
 class irl( object ):
-  def __init__( self, learning, radius, replan, theta = None, data = None, ids = None, delta = 0.25 ):
+  def __init__( self, learning, radius, h, theta = None, data = None, ids = None, delta = 0.25 ):
     self.features = momo.irl.features.flow
     self.learning = learning
     self.__learn = momo.irl.learning.__dict__[learning].learn
     self.radius = float( radius )
-    self.replan = int( replan )
+    self.h = int( h )
     self.theta  = theta
     self.delta  = delta
 
@@ -26,7 +26,7 @@ class irl( object ):
 
     self.theta = self.__learn( 
       self.features, self.__convert, frame_data, ids, 
-      radius = self.radius, replan = self.replan
+      radius = self.radius, h = self.h
     )
 
   def set_convert( self, convert ):
@@ -36,8 +36,8 @@ class irl( object ):
 
   convert = property( None, set_convert )
 
-  def plan( self, start, goal, velocity, frames, replan = 1 ):
-    return self.planner( start, goal, velocity, frames, replan, self.theta )
+  def plan( self, start, goal, velocity, frames, h = 1 ):
+    return self.planner( start, goal, velocity, frames, h, self.theta )
 
   def feature_sum( self, states, frames ):
     result = np.array( [0.] * self.features.FEATURE_LENGTH )
@@ -47,11 +47,11 @@ class irl( object ):
     return result
 
   def save( self, stream ):
-    cPickle.dump( [self.learning, self.radius, self.replan, self.theta], stream )
+    cPickle.dump( [self.learning, self.radius, self.h, self.theta], stream )
 
   @staticmethod
   def load( stream ):
-    learning, radius, replan, theta = cPickle.load( stream )
-    result = irl( learning, radius, replan, theta )
+    learning, radius, h, theta = cPickle.load( stream )
+    result = irl( learning, radius, h, theta )
     return result
 

@@ -1,13 +1,5 @@
-import sys
-import os
-
-BASE_DIR = os.path.abspath( os.path.join( os.path.dirname( __file__ ), "../../.." ) )
-path     = os.path.abspath( os.path.join( BASE_DIR, "python" ) )
-sys.path.append( path )
-
 import pyopencl as cl
 import numpy as np
-import pylab as pl
 from math import *
 import momo
 from __common__ import *
@@ -66,19 +58,6 @@ class forward_backward( momo.opencl.Program ):
       )
       e2.wait()
     cl.enqueue_copy( self.queue, floats, f1_buffer )
-    pl.ion()
-    pl.clf()
-    pl.subplot( 2, 1, 1 )
-    pl.axis( "scaled" )
-    pl.xlim( 0, floats.shape[2] - 1 )
-    pl.ylim( 0, floats.shape[1] - 1 )
-    pl.imshow( costs[0] )
-    pl.subplot( 2, 1, 2 )
-    pl.axis( "scaled" )
-    pl.xlim( 0, floats.shape[2] - 1 )
-    pl.ylim( 0, floats.shape[1] - 1 )
-    pl.imshow( np.sum( floats, 0 ) )
-    pl.draw()
     return floats
 
 
