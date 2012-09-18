@@ -1,3 +1,5 @@
+//#pragma OPENCL EXTENSION cl_khr_fp64: enable
+
 void computeFeature( 
   float2 position, float2 velocity, float radius,
   uint frameSize, __constant float4 * frame, 

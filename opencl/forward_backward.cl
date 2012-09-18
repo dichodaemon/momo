@@ -1,3 +1,5 @@
+//#pragma OPENCL EXTENSION cl_khr_fp64: enable
+
 __kernel void forwardPass(
   uint width, uint height,
   __constant int2 * directions, 

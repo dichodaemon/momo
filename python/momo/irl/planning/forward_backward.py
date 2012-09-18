@@ -10,9 +10,6 @@ class forward_backward( object ):
     start = self.convert.from_world2( start )
     goal = self.convert.from_world2( goal )
 
-    print "start", start
-    print "goal", goal
-
     costs = self.compute_costs( velocity, theta, frame )
     forward = self.planner( costs, start, 1 )
     backward = self.planner( costs, goal, -1 )
