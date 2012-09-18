@@ -1,5 +1,6 @@
 import pyopencl as cl
 import numpy as np
+import momo
 from math import *
 
 class Program( object ):
@@ -10,6 +11,6 @@ class Program( object ):
   def loadProgram( self, filename ):
     f = open( filename, 'r' )
     fstr = "".join( f.readlines() )
-    program = cl.Program( self.context, fstr ).build()
+    program = cl.Program( self.context, fstr ).build( "-I %s/opencl/" % momo.BASE_DIR )
     return program
 

@@ -1,6 +1,7 @@
 import numpy as np
 import pylab as pl
 import momo
+from compute_cummulated import *
 from math import *
 
 def learn( feature_module, convert, frame_data, ids, radius, replan ):
@@ -55,26 +56,13 @@ def compute_gradient( feature_module, planner, convert, compute_features, states
   forward, backward, costs = planner( states[0], states[-1], avg_velocity, frames[0], w )
   features = compute_features( avg_velocity, frames[0] )
 
-  mu_expected = np.zeros( feature_module.FEATURE_LENGTH )
-  cummulated = forward * 0.
 
-  for d in xrange( forward.shape[0] ):
-    for y in xrange( forward.shape[1] ):
-      for x in xrange( forward.shape[2] ):
-        for td in xrange( d - 1, d + 2 ):
-          d0 = td
-          if d0 > 7:
-            d0 -= 8
-          elif d0 < 0:
-            d0 += 8
-          delta = momo.planning.DIRECTIONS[d]
-          x0 = x - delta[0]
-          y0 = y - delta[1]
+  accum = compute_cummulated()
+  cummulated, w_features  = accum( forward, backward, costs, features )
 
-          if x0 >= 0 and x0 < forward.shape[2] and y0 >= 0 and y0 < forward.shape[1]:
-            tmp = forward[d0, y0, x0] * exp( -costs[d, y, x] ) * backward[d, y, x]
-            mu_expected += features[d, y, x] * tmp
-            cummulated[d, y, x] += tmp
+  mu_expected = np.sum( w_features, axis = 0 )
+  mu_expected = np.sum( mu_expected, axis = 0 )
+  mu_expected = np.sum( mu_expected, axis = 0 )
   mu_expected /= np.sum( mu_expected[:4] )
 
   pl.figure( 1 )

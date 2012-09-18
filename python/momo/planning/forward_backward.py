@@ -16,7 +16,7 @@ import time
 class forward_backward( momo.opencl.Program ):
   def __init__( self ):
     momo.opencl.Program.__init__( self )
-    self.flow = self.loadProgram( momo.BASE_DIR + "/opencl/forward_backward.cl" )
+    self.flow = self.loadProgram( momo.BASE_DIR + "/opencl/forwardBackward.cl" )
 
     mf = cl.mem_flags
 
