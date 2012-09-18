@@ -11,7 +11,7 @@ def learn( feature_module, convert, frame_data, ids, radius, replan ):
   compute_features = feature_module.compute_features( convert, radius )
 
   # Initialize weight vector
-  w  = np.random.rand( feature_length )
+  w  = np.random.rand( feature_length ).astype( np.float64 )
 
   gamma = 1.0
   for o_id in ids:
@@ -27,11 +27,12 @@ def learn( feature_module, convert, frame_data, ids, radius, replan ):
         break
       for i in xrange( feature_length ):
         w[i] *= exp( -gamma * gradient[i] )
+      print w.dtype
       gamma *= 0.999
       magnitude = np.linalg.norm( gradient )
       print "gradient", magnitude
       print "gamma", gamma
-      if magnitude < 0.20:
+      if magnitude < 0.1:
         break
 
   return w
@@ -51,7 +52,7 @@ def compute_gradient( feature_module, planner, convert, compute_features, states
 
   pl.figure( 0 )
   pl.ion()
-  forward, backward, costs = planner( states[0], states[-1], avg_velocity, frames[0], w * 2 )
+  forward, backward, costs = planner( states[0], states[-1], avg_velocity, frames[0], w )
   features = compute_features( avg_velocity, frames[0] )
 
   mu_expected = np.zeros( feature_module.FEATURE_LENGTH )

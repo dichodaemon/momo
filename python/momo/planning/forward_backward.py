@@ -31,11 +31,11 @@ class forward_backward( momo.opencl.Program ):
     height = costs.shape[1]
 
 
-    floats = np.zeros( costs.shape, dtype=np.float32 )
+    floats = np.zeros( costs.shape, dtype=np.float64 )
     ints   = np.zeros( costs.shape, dtype=np.int32 )
     ints[tuple( reversed( start.tolist() ) )] = 1
 
-    cost_buffer  = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = costs.astype( np.float32 ) )
+    cost_buffer  = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = costs.astype( np.float64 ) )
     mask_buffer = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = ints )
     f1_buffer  = cl.Buffer( self.context, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf = floats )
     f2_buffer  = cl.Buffer( self.context, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf = floats )
@@ -68,6 +68,15 @@ class forward_backward( momo.opencl.Program ):
     cl.enqueue_copy( self.queue, floats, f1_buffer )
     pl.ion()
     pl.clf()
+    pl.subplot( 2, 1, 1 )
+    pl.axis( "scaled" )
+    pl.xlim( 0, floats.shape[2] - 1 )
+    pl.ylim( 0, floats.shape[1] - 1 )
+    pl.imshow( costs[0] )
+    pl.subplot( 2, 1, 2 )
+    pl.axis( "scaled" )
+    pl.xlim( 0, floats.shape[2] - 1 )
+    pl.ylim( 0, floats.shape[1] - 1 )
     pl.imshow( np.sum( floats, 0 ) )
     pl.draw()
     return floats

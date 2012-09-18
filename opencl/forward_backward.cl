@@ -1,11 +1,27 @@
-//#pragma OPENCL EXTENSION cl_khr_fp64: enable
+#pragma OPENCL EXTENSION cl_khr_fp64: enable
+
+double t_exp( double v )
+{
+  double vI = v;
+  double resultB = 1;
+  double result = 1 + vI;
+  int i = 2;
+  while( resultB - result != 0 )
+  {
+    vI   = vI * v / i;
+    resultB = result;
+    result  += vI;
+    i++;
+  }
+  return result;
+}
 
 __kernel void forwardPass(
   uint width, uint height,
   __constant int2 * directions, 
-  __global float * costs,
+  __global double * costs,
   __global int * masks, 
-  __global float * f1, __global float * f2
+  __global double * f1, __global double * f2
 ) {
   int direction = get_global_id( 0 );
   int row       = get_global_id( 1 );
@@ -15,7 +31,7 @@ __kernel void forwardPass(
 
   int mask = masks[stateIndex];
 
-  float origin = 0;
+  double origin = 0;
 
   for ( int d = direction - 1; d < direction + 2; d++ ) {
     int d_forward = d;
@@ -32,7 +48,7 @@ __kernel void forwardPass(
     origin += mask;
     if ( c >= 0 && c < width && r >= 0 && r < height ) {
       int priorIndex = d_forward * width * height + r * width + c;
-      origin += f1[priorIndex] * exp( -costs[stateIndex] );
+      origin += f1[priorIndex] * t_exp( -costs[stateIndex] );
     }
   }
   f2[stateIndex] = origin;
@@ -41,9 +57,9 @@ __kernel void forwardPass(
 __kernel void backwardPass(
   uint width, uint height, 
   __constant int2 * directions, 
-  __global float * costs,
+  __global double * costs,
   __global int * masks, 
-  __global float * f1, __global float * f2
+  __global double * f1, __global double * f2
 ) {
   int direction = get_global_id( 0 );
   int row       = get_global_id( 1 );
@@ -53,7 +69,7 @@ __kernel void backwardPass(
 
   int mask = masks[stateIndex];
 
-  float origin = 0;
+  double origin = 0;
 
   for ( int d = direction - 1; d < direction + 2; d++ ) {
     int d_forward = d;
@@ -70,7 +86,7 @@ __kernel void backwardPass(
     origin += mask;
     if ( c >= 0 && c < width && r >= 0 && r < height ) {
       int nextIndex = d_forward * width * height + r * width + c;
-      origin += f1[nextIndex] * exp( -costs[nextIndex] );
+      origin += f1[nextIndex] * t_exp( -costs[nextIndex] );
     }
   }
   f2[stateIndex] = origin;
@@ -78,7 +94,7 @@ __kernel void backwardPass(
 
 __kernel void updatePass(
   uint width, uint height,
-  __global float * f1, __global float * f2
+  __global double * f1, __global double * f2
 ) {
   int direction = get_global_id( 0 );
   int row       = get_global_id( 1 );

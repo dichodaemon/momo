@@ -19,9 +19,9 @@ class compute_costs( momo.opencl.Program ):
 
   def __call__( self, speed, theta, frame ):
     mf = cl.mem_flags
-    costs = np.zeros( (8, self.convert.grid_height, self.convert.grid_width ), dtype=np.float32 )
+    costs = np.zeros( (8, self.convert.grid_height, self.convert.grid_width ), dtype=np.float64 )
 
-    theta_buffer = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = theta.astype( np.float32 )  )
+    theta_buffer = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = theta.astype( np.float64 )  )
     frame_buffer = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = self.convert.rebase_frame( frame ).astype( np.float32 ) )
     cost_buffer  = cl.Buffer( self.context, mf.WRITE_ONLY, costs.nbytes )
 

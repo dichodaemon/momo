@@ -1,4 +1,4 @@
-//#pragma OPENCL EXTENSION cl_khr_fp64: enable
+#pragma OPENCL EXTENSION cl_khr_fp64: enable
 
 void computeFeature( 
   float2 position, float2 velocity, float radius,
@@ -58,7 +58,7 @@ __kernel void computeCosts(
   uint width, uint height,
   uint frameSize, __constant float4 * frame, 
   __constant float2 * directions, __constant float2 * angles, __constant float * speeds, 
-  __constant float * theta, __global float * costs
+  __constant double * theta, __global double * costs
 ) {
   unsigned int direction = get_global_id( 0 );
   unsigned int row       = get_global_id( 1 );
