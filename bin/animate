@@ -39,6 +39,7 @@ def animate( x1, y1, width, height, data ):
       y[o_id] = o_y
     for o_id in x.keys():
       pl.plot( [x[o_id]], [y[o_id]], 'b.', markersize = 10 )
+      pl.annotate( "%i" % o_id, ( x[o_id], y[o_id] ) )
       if o[0] == ends[o_id]:
         del x[o_id]
         del y[o_id]

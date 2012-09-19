@@ -17,5 +17,5 @@ test:
 	#bin/test long_sparse irl abbeel 3 1 --ids 63 --delta 0.25 --velocity 0.024 --num_random 1 --frame_skip 3 --start_frame 100
 
 learn:
-	#bin/learn long_sparse irl abbeel 3 1 --ids 60,61,62 --delta 0.25
-	bin/learn long_sparse irl henry 3 10 --ids 60,61,62 --delta 0.25
+	#bin/learn long_sparse irl henry 3 10 --ids 30,61,1,53 --delta 0.25
+	bin/learn long_sparse irl stork 3 10 --ids 30,61,1,53 --delta 0.25
