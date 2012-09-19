@@ -2,7 +2,7 @@ TODO
 ====
 
   * Integral images for feature expectation in Henry (GPU)
-  * Check consequences of stopping using DIRECTIONS with real length
+  * Check path rasterization
 
 DONE
 ====
@@ -11,3 +11,4 @@ DONE
   * Check usage of float version of DIRECTIONS
   * Check world2 orientation cw/ccw
   * Check goal orientation
+  * Check consequences of stopping using DIRECTIONS with real length

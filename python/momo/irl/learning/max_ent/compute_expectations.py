@@ -12,8 +12,8 @@ def compute_expectations( feature_module, convert, radius, states, frames, w, h 
   repr_path = [convert.to_world2( convert.from_world2( s ), np.linalg.norm( s[2:] ) ) for s in states[:h]]
   mu_observed = momo.irl.features.feature_sum( 
     feature_module, 
-    repr_path,
-    frames 
+    repr_path[:h],
+    frames[:h] 
   )
 
   velocities = [np.linalg.norm( v[2:] ) for v in states]
