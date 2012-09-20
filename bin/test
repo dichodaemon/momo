@@ -189,7 +189,7 @@ for o_id in ids:
 
 
   # Compute planned feature_sum
-  planned = algorithm.plan( states[0], states[-1], velocity, frames, h = 1 )
+  planned = algorithm.plan( states[0], states[-1], velocity, frames )
   val = algorithm.feature_sum( planned, frames )
   mu_planned[o_id] = val / sum( val[:4] )
 
@@ -225,7 +225,7 @@ for i in xrange( num_random ):
         max_dist = dist
         start = s
         goal = g
-  planned = algorithm.plan( start, goal, velocity, random_frames, replan = 1 )
+  planned = algorithm.plan( start, goal, velocity, random_frames  )
   random_paths.append( planned )
   random_obstructions.append( count_obstructions( planned, random_frames ) )
 

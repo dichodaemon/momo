@@ -3,6 +3,7 @@ TODO
 
   * Integral images for feature expectation in Henry (GPU)
   * Check path rasterization
+  * Correct irl.plan to do 1 step replanning
 
 DONE
 ====

@@ -36,8 +36,8 @@ class irl( object ):
 
   convert = property( None, set_convert )
 
-  def plan( self, start, goal, velocity, frames, h = 1 ):
-    return self.planner( start, goal, velocity, frames, h, self.theta )
+  def plan( self, start, goal, velocity, frames ):
+    return self.planner( start, goal, velocity, frames[0], self.theta )[0]
 
   def feature_sum( self, states, frames ):
     result = np.array( [0.] * self.features.FEATURE_LENGTH )
