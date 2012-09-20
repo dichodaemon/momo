@@ -4,6 +4,9 @@ TODO
   * Integral images for feature expectation in Henry (GPU)
   * Check path rasterization
   * Correct irl.plan to do 1 step replanning
+  * Try to do forward and backwards simultaneously
+  * Optimize observed feature computations
+  * Correct handling of duplicate names in tick_tack
 
 DONE
 ====

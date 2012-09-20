@@ -31,16 +31,20 @@ class forward_backward( momo.opencl.Program ):
     mask_buffer = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = ints )
     f1_buffer  = cl.Buffer( self.context, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf = floats )
     f2_buffer  = cl.Buffer( self.context, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf = floats )
-    
+
+    wait = []
 
     for i in xrange( sum( costs.shape ) ):
+      momo.tick( "first + second" )
+      momo.tick( "first" )
       if sign > 0:
         e1 = self.flow.forwardPass( 
           self.queue, costs.shape, None, 
           np.int32( width ), np.int32( height ),
           self.idirection_buffer, cost_buffer,
           mask_buffer,  
-          f1_buffer, f2_buffer
+          f1_buffer, f2_buffer, 
+          wait_for = wait
         )
       else:
         e1 = self.flow.backwardPass( 
@@ -48,16 +52,27 @@ class forward_backward( momo.opencl.Program ):
           np.int32( width ), np.int32( height ),
           self.idirection_buffer, cost_buffer,
           mask_buffer,  
-          f1_buffer, f2_buffer
+          f1_buffer, f2_buffer,
+          wait_for = wait
         )
+      wait = [e1]
+      momo.tack( "first" )
+      momo.tick( "second" )
       e2 = self.flow.updatePass( 
         self.queue, costs.shape, None, 
         np.int32( width ), np.int32( height ),
-        f1_buffer, f2_buffer,
-        wait_for = [e1] 
+        f1_buffer, f2_buffer, 
+        wait_for = wait
       )
-      e2.wait()
+      wait = [e2]
+      momo.tack( "second" )
+      momo.tack( "first + second" )
+    momo.tick( "wait" )
+    e2.wait()
+    momo.tack( "wait" )
+    momo.tick( "copy" )
     cl.enqueue_copy( self.queue, floats, f1_buffer )
+    momo.tack( "copy" )
     return floats
 
 
