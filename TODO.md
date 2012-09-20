@@ -7,6 +7,8 @@ TODO
   * Try to do forward and backwards simultaneously
   * Optimize observed feature computations
   * Correct handling of duplicate names in tick_tack
+  * What if we don't normalize the expected counts?
+  * What if we normalize the weight vector?
 
 DONE
 ====

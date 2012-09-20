@@ -14,10 +14,10 @@ class forward_backward( object ):
     costs = self.compute_costs( velocity, theta, frame )
     momo.tack( "FB Costs" )
     #momo.tick( "FB Forward" )
-    forward = self.planner( costs, start, 1 )
+    forward, backward = self.planner( costs, start, goal )
     #momo.tack( "FB Forward" )
     #momo.tick( "FB Backward" )
-    backward = self.planner( costs, goal, -1 )
+    #backward = self.planner( costs, goal, -1 )
     #momo.tack( "FB Backward" )
     return forward, backward, costs
 

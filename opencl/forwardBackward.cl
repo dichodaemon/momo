@@ -7,8 +7,10 @@ __kernel void forwardPass(
   uint width, uint height,
   __constant int2 * directions, 
   __global double * costs,
-  __global int * masks, 
-  __global double * f1, __global double * f2
+  __global int * fMasks,
+  __global int * bMasks,
+  __global double * f1, __global double * f2,
+  __global double * b1, __global double * b2
 ) {
   int direction = get_global_id( 0 );
   int row       = get_global_id( 1 );
@@ -16,72 +18,53 @@ __kernel void forwardPass(
 
   unsigned int stateIndex = direction * width * height + row * width + column;
 
-  int mask = masks[stateIndex];
+  int fMask = fMasks[stateIndex];
+  int bMask = bMasks[stateIndex];
 
-  double origin = 0;
+  double fValue = 0;
+  double bValue = 0;
 
   for ( int d = direction - 1; d < direction + 2; d++ ) {
-    int d_forward = d;
-    if ( d_forward < 0 ) {
-      d_forward += 8;
-    } else if ( d_forward > 7 ) {
-      d_forward -= 8;
+    int dForward = d;
+    if ( dForward < 0 ) {
+      dForward += 8;
+    } else if ( dForward > 7 ) {
+      dForward -= 8;
     }
+    // Forward
     int2 delta = directions[direction];
 
-    // Update this state
     int c = column - delta.x;
     int r = row - delta.y;
-    origin += mask;
+    fValue += fMask;
     if ( c >= 0 && c < width && r >= 0 && r < height ) {
-      int priorIndex = d_forward * width * height + r * width + c;
-      origin += f1[priorIndex] * t_exp( -costs[stateIndex] );
+      int priorIndex = dForward * width * height + r * width + c;
+      // TODO: Check t_exp is necessary
+      /*fValue += f1[priorIndex] * exp( -costs[stateIndex] );*/
+      fValue += f1[priorIndex];
+    }
+
+    // Backward
+    delta = directions[dForward];
+
+    c = column + delta.x;
+    r = row + delta.y;
+    bValue += bMask;
+    if ( c >= 0 && c < width && r >= 0 && r < height ) {
+      int nextIndex = dForward * width * height + r * width + c;
+      // TODO: Check t_exp is necessary
+      /*bValue += b1[nextIndex] * exp( -costs[nextIndex] );*/
+      bValue += b1[nextIndex];
     }
   }
-  f2[stateIndex] = origin;
-}
-
-__kernel void backwardPass(
-  uint width, uint height, 
-  __constant int2 * directions, 
-  __global double * costs,
-  __global int * masks, 
-  __global double * f1, __global double * f2
-) {
-  int direction = get_global_id( 0 );
-  int row       = get_global_id( 1 );
-  int column    = get_global_id( 2 );
-
-  unsigned int stateIndex = direction * width * height + row * width + column;
-
-  int mask = masks[stateIndex];
-
-  double origin = 0;
-
-  for ( int d = direction - 1; d < direction + 2; d++ ) {
-    int d_forward = d;
-    if ( d_forward < 0 ) {
-      d_forward += 8;
-    } else if ( d_forward > 7 ) {
-      d_forward -= 8;
-    }
-    int2 delta = directions[d_forward];
-
-    // Update this state
-    int c = column + delta.x;
-    int r = row + delta.y;
-    origin += mask;
-    if ( c >= 0 && c < width && r >= 0 && r < height ) {
-      int nextIndex = d_forward * width * height + r * width + c;
-      origin += f1[nextIndex] * t_exp( -costs[nextIndex] );
-    }
-  }
-  f2[stateIndex] = origin;
+  f2[stateIndex] = fValue;
+  b2[stateIndex] = bValue;
 }
 
 __kernel void updatePass(
   uint width, uint height,
-  __global double * f1, __global double * f2
+  __global double * f1, __global double * f2,
+  __global double * b1, __global double * b2
 ) {
   int direction = get_global_id( 0 );
   int row       = get_global_id( 1 );
@@ -90,5 +73,6 @@ __kernel void updatePass(
   unsigned int stateIndex = direction * width * height + row * width + column;
 
   f1[stateIndex] = f2[stateIndex];
+  b1[stateIndex] = b2[stateIndex];
 }
 

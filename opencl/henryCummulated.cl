@@ -37,6 +37,7 @@ __kernel void cummulated1(
       int r = row - delta.y;
       if ( c >= 0 && c < width && r >= 0 && r < height ) {
         int priorIndex = d_forward * width * height + r * width + c;
+        // TODO: Check t_exp is necessary
         value += forward[priorIndex] * t_exp( -costs[stateIndex] ) * backward[stateIndex];
       }
     }
