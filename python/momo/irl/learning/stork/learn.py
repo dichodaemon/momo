@@ -12,16 +12,21 @@ def learn( feature_module, convert, frame_data, ids, radius, h ):
   compute_features = feature_module.compute_features( convert, radius )
   accum = compute_cummulated()
 
+  observed_integral = {}
+  grid_paths = {}
+  for o_id in ids:
+    states = frame_data[o_id]["states"]
+    frames = frame_data[o_id]["frames"]
+    obs, path = compute_observed( feature_module, convert, states, frames, radius )
+    observed_integral[o_id] = obs
+    grid_paths[o_id] = path
+
   # Initialize weight vector
   w  = ( np.ones( feature_length ) * 1.0 / feature_length ).astype( np.float64 )
 
   gamma = 1.0
 
-  observed_integral = {}
-  grid_paths = {}
-  for o_id in ids
-
-  for times in xrange( 200 ):
+  for times in xrange( 300 ):
 
     momo.tick( "Step" )
     sum_obs = np.zeros( feature_length, np.float64 )
@@ -39,7 +44,7 @@ def learn( feature_module, convert, frame_data, ids, radius, h ):
             convert, compute_costs, planner, compute_features, accum
           )
         momo.tack( "Compute Expectations" )
-        observed = observed_integral[o_id][i + h - 1]
+        observed = observed_integral[o_id][min( i + h - 1, l - 1 )]
         if i > 0:
           observed -= observed_integral[o_id][i - 1]
         sum_obs += observed
@@ -65,17 +70,17 @@ def learn( feature_module, convert, frame_data, ids, radius, h ):
   return w
 
 
-def compute_observed( feature_module, convert, states, frames ):
+def compute_observed( feature_module, convert, states, frames, radius ):
   momo.tick( "Compute observed" )
   momo.tick( "Discretize" )
   l = len( states )
   grid_path = [convert.from_world2( s ) for s in states]
-  repr_path = [convert.to_world2( convert.from_world2( s ), np.linalg.norm( s[2:] ) ) for s in states[:h]]
+  repr_path = [convert.to_world2( convert.from_world2( s ), np.linalg.norm( s[2:] ) ) for s in states]
   momo.tack( "Discretize" )
   momo.tick( "Compute" )
-  result = np.zeros( len( states ) )
+  result = []
   for i in xrange( len( states ) ):
-    result[i] = feature_module.compute_feature( states[i], frames[i] )
+    result.append( feature_module.compute_feature( states[i], frames[i], radius ) )
     if i > 0:
       result[i] += result[i- 1]
   momo.tack( "Compute" )
