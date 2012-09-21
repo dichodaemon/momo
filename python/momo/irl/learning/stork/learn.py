@@ -24,9 +24,15 @@ def learn( feature_module, convert, frame_data, ids, radius, h ):
   # Initialize weight vector
   w  = ( np.ones( feature_length ) * 1.0 / feature_length ).astype( np.float64 )
 
-  gamma = 1.0
+  gamma = 0.5
+  decay = 0.98
+  min_w = None
+  min_e = 1E6
 
-  for times in xrange( 300 ):
+  print "Gamma", gamma
+  print "Decay", decay
+
+  for times in xrange( 100 ):
 
     momo.tick( "Step" )
     sum_obs = np.zeros( feature_length, np.float64 )
@@ -40,34 +46,37 @@ def learn( feature_module, convert, frame_data, ids, radius, h ):
         momo.tick( "Compute Expectations" )
         expected, cummulated, costs =\
           momo.irl.learning.max_ent.compute_expectations( 
-            states[i:], frames[i:], w, h,
+            states[i:], frames[i:], w * 4, h,
             convert, compute_costs, planner, compute_features, accum
           )
         momo.tack( "Compute Expectations" )
-        observed = observed_integral[o_id][min( i + h - 1, l - 1 )]
+        observed = observed_integral[o_id][min( i + h, l - 1 )] * 1
         if i > 0:
           observed -= observed_integral[o_id][i - 1]
         sum_obs += observed
         sum_exp += expected
 
-
-        gradient = observed / np.sum( observed[:4] ) - expected / np.sum( expected[:4] )
-        if np.any( np.isnan( gradient ) ):
+        if np.any( np.isnan( expected ) ):
           continue
+        gradient = observed / np.sum( observed[:4] ) - expected / np.sum( expected[:4] )
         error = np.linalg.norm( gradient )
         #momo.plot.gradient_descent_step( cummulated, costs, grid_paths[o_id], error )
     gradient = sum_obs / np.sum( sum_obs[:4] ) - sum_exp / np.sum( sum_exp[:4] )
     error = np.linalg.norm( gradient )
+    if error < min_e:
+      min_e = error
+      min_w = w
     print times, error
     if error < 0.05:
       break
     for i in xrange( feature_length ):
-      w[i] *= exp( -gamma * 0.997 ** times * gradient[i] )
-    w[i] /= np.linalg.norm( w )
+      w[i] *= exp( -gamma * decay ** times * gradient[i] )
+      #w[i] *= exp( -gamma * gradient[i] )
     momo.tack( "Step" )
     print "\n".join( momo.stats( "Step" ) )
 
-  return w
+  print min_e
+  return min_w
 
 
 def compute_observed( feature_module, convert, states, frames, radius ):

@@ -36,12 +36,11 @@ __kernel void forwardPass(
 
     int c = column - delta.x;
     int r = row - delta.y;
-    fValue += fMask;
     if ( c >= 0 && c < width && r >= 0 && r < height ) {
       int priorIndex = dForward * width * height + r * width + c;
+      fValue += fMask;
       // TODO: Check t_exp is necessary
-      /*fValue += f1[priorIndex] * exp( -costs[stateIndex] );*/
-      fValue += f1[priorIndex];
+      fValue += f1[priorIndex] * exp( -costs[stateIndex] );
     }
 
     // Backward
@@ -49,12 +48,11 @@ __kernel void forwardPass(
 
     c = column + delta.x;
     r = row + delta.y;
-    bValue += bMask;
     if ( c >= 0 && c < width && r >= 0 && r < height ) {
       int nextIndex = dForward * width * height + r * width + c;
+      bValue += bMask;
       // TODO: Check t_exp is necessary
-      /*bValue += b1[nextIndex] * exp( -costs[nextIndex] );*/
-      bValue += b1[nextIndex];
+      bValue += b1[nextIndex] * exp( -costs[nextIndex] );
     }
   }
   f2[stateIndex] = fValue;

@@ -1,5 +1,17 @@
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sys
+import os
+
+BASE_DIR = os.path.abspath( os.path.join( os.path.dirname( __file__ ), "..", "..", ".." ) )
+path     = os.path.abspath( os.path.join( BASE_DIR, "python" ) )
+print BASE_DIR
+sys.path.append( path )
+
 import pyopencl as cl
 import numpy as np
+import pylab as pl
 from math import *
 import momo
 from __common__ import *
@@ -26,10 +38,12 @@ class forward_backward( momo.opencl.Program ):
     forward = np.zeros( costs.shape, dtype=np.float64 )
     f_masks = np.zeros( costs.shape, dtype=np.int32 )
     f_masks[tuple( reversed( start.tolist() ) )] = 1
+    forward[tuple( reversed( start.tolist() ) )] = 1
 
     backward = np.zeros( costs.shape, dtype=np.float64 )
     b_masks = np.zeros( costs.shape, dtype=np.int32 )
     b_masks[tuple( reversed( goal.tolist() ) )] = 1
+    backward[tuple( reversed( goal.tolist() ) )] = 1
 
     cost_buffer  = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = costs.astype( np.float64 ) )
 
@@ -82,16 +96,15 @@ class forward_backward( momo.opencl.Program ):
 if __name__ == "__main__":
   costs = np.ones( (8, 7, 8 ) )
   for i in xrange( 4 ):
-    costs[i] *= ( i + 1 ) * 0.1
+    costs[i] *= ( i + 1 ) * 10
     if i != 0:
-      costs[8 - i] *= ( i + 1 ) * 0.1
+      costs[8 - i] *= ( i + 1 ) * 10
 
   start = np.array( [1, 3, 0], dtype = np.int32 )
   end = np.array( [6, 3, 0], dtype = np.int32 )
 
   fb = forward_backward()
 
-  f = fb( costs, start, 1 )
-  b = fb( costs, end, -1 )
+  f, b = fb( costs, start, end )
   print b[0, 3, 1], f[6, 3, 0]
 
