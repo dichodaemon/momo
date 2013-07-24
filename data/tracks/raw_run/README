@@ -1,0 +1,13 @@
+These text files contain raw data from the simulator in the following format
+
+[Frame Time AgentID Agent_X Agent_Y AgentType]
+
+The agent of interest here is agent type == 2 which is the robot.
+In all scenarios, the robot starts at (100,20) and has a goal directly ahead at (100,220) 
+hence moving a total of 200 units in the y direction (directly upwards).
+
+The agents either start at the top, to the right or both corresponding the three cases in
+the paper. The numbers are 10 for each origin except in the last scenario where only 5 agents
+start from the right. The scene files show these better with descriptions of expected behavior
+of the robot.
+

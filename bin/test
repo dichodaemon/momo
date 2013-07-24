@@ -166,7 +166,7 @@ frame_data = convert.preprocess_data( data )
 algorithm.convert = convert
 
 if len( ids ) == 0:
-  self.ids = ids
+  #self.ids = ids
   l = len( frame_data.keys() ) / 2
   ids = range( l, l + 5 )
 

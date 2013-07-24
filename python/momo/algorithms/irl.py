@@ -4,8 +4,8 @@ import cPickle
 from math import *
 
 class irl( object ):
-  def __init__( self, learning, radius, h, theta = None, data = None, ids = None, delta = 0.25 ):
-    self.features = momo.irl.features.flow
+  def __init__( self, features, learning, radius, h, theta = None, data = None, ids = None, delta = 0.25 ):
+    self.features = momo.irl.features.__dict__[features]
     self.learning = learning
     self.__learn = momo.irl.learning.__dict__[learning].learn
     self.radius = float( radius )

@@ -1,0 +1,214 @@
+#!/usr/bin/python
+
+import numpy as np
+import pylab as pl
+import numbers
+
+
+actions = np.array( [
+  [[0.0, 0.0, 0.1],
+   [0.0, 0.1, 0.7], 
+   [0.0, 0.0, 0.1]],
+  [[0.0, 0.0, 0.0],
+   [0.0, 0.1, 0.0], 
+   [0.1, 0.7, 0.1]],
+  [[0.1, 0.0, 0.0],
+   [0.7, 0.1, 0.0], 
+   [0.1, 0.0, 0.0]],
+  [[0.1, 0.7, 0.1],
+   [0.0, 0.1, 0.0], 
+   [0.0, 0.0, 0.0]],
+  [[0.0, 0.0, 0.0],
+   [0.0, 1.0, 0.0], 
+   [0.0, 0.0, 0.0]]
+] )
+#actions = np.array( [
+  #[[0.0, 0.0, 0.0],
+   #[0.0, 0.0, 1.0], 
+   #[0.0, 0.0, 0.0]],
+  #[[0.0, 0.0, 0.0],
+   #[0.0, 0.0, 0.0], 
+   #[0.0, 1.0, 0.0]],
+  #[[0.0, 0.0, 0.0],
+   #[1.0, 0.0, 0.0], 
+   #[0.0, 0.0, 0.0]],
+  #[[0.0, 1.0, 0.0],
+   #[0.0, 0.0, 0.0], 
+   #[0.0, 0.0, 0.0]],
+  #[[0.0, 0.0, 0.0],
+   #[0.0, 1.0, 0.0], 
+   #[0.0, 0.0, 0.0]]
+#] )
+
+
+def coords( l ):
+  return tuple( reversed( l.tolist() ) )
+
+def generate_features( width, height, feature_count ):
+  result = []
+  result.append( np.ones( ( height, width ) ) )
+  for i in xrange( 1, feature_count ):
+    result.append( np.random.randint( 0, 2, ( height, width ) ) )
+  return np.array( result, dtype=np.int32 )
+
+def initialize_transition( rows, cols, actions ):
+  states = rows * cols
+  result = np.zeros( ( 5, states, states ), dtype=np.float64 )
+  for d in xrange( 5 ):
+    for i in xrange( rows ):
+      for j in xrange( cols ):
+        s  = i * cols + j
+        z  = 0.0
+        for pi in xrange( -1, 2 ):
+          ni = i + pi
+          for pj in xrange( -1, 2 ):
+            nj = j + pj
+            if ni < rows and nj < cols and ni >= 0 and nj >= 0:
+              result[d, s, ni * cols + nj] = actions[d, pi + 1, pj + 1]
+              z += actions[d, pi + 1, pj + 1]
+        if z <= 0.0:
+          result[d, s, s] = 1.0
+        else:
+          for pi in xrange( -1, 2 ):
+            ni = i + pi
+            for pj in xrange( -1, 2 ):
+              nj = j + pj
+              if ni < rows and nj < cols and ni >= 0 and nj >= 0:
+                result[d, s, ni * cols + nj] /= z
+  return result
+
+def initialize_reward( cost, transitions ):
+  rows, cols = cost.shape
+  nstates = rows * cols
+  nactions = transitions.shape[0]
+  cost = 1.0 - np.reshape( cost, ( nstates, ) )
+  transitions = np.reshape( transitions, ( nactions * nstates, nstates) )
+  reward = np.dot( transitions, cost )
+  reward = np.reshape( reward, ( nactions, nstates ) ).transpose()
+  return reward
+
+def accum(accmap, a, func=np.sum):
+  indices = np.where(np.ediff1d(accmap, to_begin=[1], to_end=[1]))[0]
+  vals = np.zeros(len(indices) - 1)
+  for i in xrange(len(indices) - 1):
+    vals[i] = func(a[indices[i]:indices[i+1]])
+  return vals
+
+
+def plot_policy( fig, policy ):
+  rows, cols = policy.shape
+  directions = np.array( [
+    [  0,  1 ], 
+    [  1, 0 ],
+    [  0, -1 ],
+    [ -1, 0 ], 
+    [  0,  0 ]
+  ] )
+  for i in xrange( rows ):
+    for j in xrange( cols ):
+      ni = directions[policy[i, j]][0] * 0.8 
+      nj = directions[policy[i, j]][1] * 0.8
+      if ni != 0 or nj != 0:
+        fig.arrow( j, i, nj, ni, head_width=0.2, head_length=0.2 )
+
+def value_iteration( mdp, reward ):
+  q = np.zeros( ( mdp.num_states, mdp.num_actions ) )
+  done = False
+  #while not done:
+  for i in xrange( mdp.num_states * 50 ):
+    q_max = np.max( q, 1 )
+    q_new = reward + mdp.discount_rate * np.transpose( np.dot( mdp.transition, q_max ) )
+    #if np.linalg.norm( q_new - q, 2 ) < 1E-10:
+      #done = True
+    q = q_new
+  policy = 1.0 * ( q == np.transpose( np.tile( np.max( q, 1 ), ( mdp.num_actions, 1 ) ) ) )
+  policy = policy / np.transpose( np.tile( np.sum( policy, 1 ), ( mdp.num_actions, 1 ) ) )
+  return q, np.argmax( policy, 1 )
+
+
+def sample( policy, mdp, goal, actions=False ):
+  result = []
+  current = ( np.random.randint( mdp.rows ), np.random.randint( mdp.columns ) )
+  count = 0
+  while current != goal: 
+    count += 1
+    a = policy[current[0], current[1]]
+    if actions:
+      result.append( tuple( list( current ) + [a] ) )
+    else:
+      result.append( current )
+    r = np.random.uniform()
+    c = 0.0
+    done = False
+    for i in xrange( mdp.num_states ):
+      c += mdp.transition[a][mdp.to_index( *current )][i] 
+      if c >= 1.0 or c > r:
+        ni, nj = mdp.from_index( i )
+        current = ( ni, nj )
+        done = True
+        break
+  if actions:
+    a = policy[current[0], current[1]]
+    result.append( tuple( list( current ) + [a] ) )
+  else:
+    result.append( current )
+  return np.array( result )
+
+def irl_actions( data, confidence = 10 ):
+  print data
+  counts = np.histogramdd( data, np.max( data, 1 ) )
+  print counts
+  return 0
+
+class MDP( object ):
+  def __init__( self, cost, discount_rate = 0.99, actions=actions ):
+    self.cost = 1.0 * cost
+    self.discount_rate = discount_rate
+    self.actions = actions
+    self.transition = initialize_transition( *cost.shape, actions=actions )
+    self.num_states = cost.shape[0] * cost.shape[1]
+    self.num_actions = self.actions.shape[0]
+    self.rows = self.cost.shape[0]
+    self.columns = self.cost.shape[1]
+
+  def policy( self, gx, gy ):
+    cost = 1.0 * self.cost
+    cost[gx, gy] = 0.0
+    reward = initialize_reward( cost, self.transition )
+    q, p = value_iteration( self, reward )
+    return q, p.reshape( self.cost.shape )
+
+  def to_index( self, i, j ):
+    return i * self.columns + j
+
+  def from_index( self, i ):
+    return ( i / self.columns, i % self.columns )
+
+if __name__ == "__main__":
+  np.set_printoptions( threshold = np.nan, precision = 3 )
+  feature_count = 4
+  width  = 10
+  height = 15
+  features = generate_features( width, height, feature_count )
+  weights  = np.random.uniform( 0, 1, ( feature_count, ) )
+  weights /= np.sum( weights )
+
+  costs = np.zeros( ( height, width ), dtype=np.float64 )
+  for i in xrange( feature_count ):
+    costs += features[i] * weights[i]
+
+  mdp = MDP( costs )
+  q, policy = mdp.policy( 3, 2 )
+  data = sample( policy, mdp, ( 3, 2 ), actions = True )
+  irl_actions( data )
+
+  pl.figure( 1, figsize = ( 22, 5 ), dpi = 75 )
+  for i in xrange( feature_count ):
+    pl.subplot( 1, feature_count + 1, i + 1 )
+    pl.imshow( features[i], pl.cm.Oranges, None, None, "none", vmin = 0 )
+  p = pl.subplot( 1, feature_count + 1, feature_count + 1 )
+  pl.imshow( costs, pl.cm.Oranges, None, None, "none", vmin = 0 )
+  plot_policy( p, policy )
+  pl.show()
+
+

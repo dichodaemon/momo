@@ -14,16 +14,17 @@ all: learn test
 	#bin/learn crossing irl abbeel 3 1000 --ids 90,91,92,93 --delta 0.25
 
 test:
-	bin/test long_sparse irl abbeel 3 1 --ids 30 --delta 0.25 --velocity 0.024 --num_random 1 --frame_skip 3 --start_frame 100
+	bin/test long_sparse irl abbeel 3 20 --ids 30 --delta 0.25 --velocity 0.024 --num_random 1 --frame_skip 3 --start_frame 100
 
 learn:
+	bin/learn long_sparse irl abbeel 3 20 --ids 61,1,53 --delta 0.25
 	#bin/learn long_sparse irl stork 3 10 --ids 30,61,1,53 --delta 0.25
 	#bin/learn long_sparse irl stork 3 20 --ids 30,61,1,53 --delta 0.25
 	#bin/learn long_sparse irl stork 3 30 --ids 30,61,1,53 --delta 0.25
 	#bin/learn long_sparse irl stork 3 40 --ids 30,61,1,53 --delta 0.25
 	#bin/learn long_sparse irl stork 3 1000 --ids 30,61,1,53 --delta 0.25
-	bin/learn long irl stork 3 10 --ids 427,296,170,75 --delta 0.25
-	bin/learn long irl stork 3 20 --ids 427,296,170,75 --delta 0.25
-	bin/learn long irl stork 3 30 --ids 427,296,170,75 --delta 0.25
-	bin/learn long irl stork 3 40 --ids 427,296,170,75 --delta 0.25
-	bin/learn long irl stork 3 1000 --ids 427,296,170,75 --delta 0.25
+	#bin/learn long irl stork 3 10 --ids 427,296,170,75 --delta 0.25
+	#bin/learn long irl stork 3 20 --ids 427,296,170,75 --delta 0.25
+	#bin/learn long irl stork 3 30 --ids 427,296,170,75 --delta 0.25
+	#bin/learn long irl stork 3 40 --ids 427,296,170,75 --delta 0.25
+	#bin/learn long irl stork 3 1000 --ids 427,296,170,75 --delta 0.25

@@ -1,0 +1,44 @@
+<scenario>
+  <!--
+	Robot start as the bottom with a goal at the top, but has to avoid agents coming
+	from the right in a durection perpendicular to the robot's path
+  -->	  
+
+  <!-- waypoints - above the agents! -->
+  <waypoint id="wu" x="100" y="10" r="10" />
+  <waypoint id="wd" x="100" y="220" r="10" />
+  <waypoint id="wl" x="110" y="115" r="10" />
+  <waypoint id="goal" x="100" y="220" r="5" />
+
+  <!-- agents -->
+  <agent x="220" y="115" n="10" dx="20" dy="20" type="0">
+     <addwaypoint id="wl" />
+	 <addwaypoint id="wu" />
+	 <addwaypoint id="wd" />
+  </agent>
+
+  <!-- Robot -->
+  <agent x="100" y="10" n="1" dx="1" dy="1" type="2">
+	 <addwaypoint id="goal" />
+  </agent>
+  
+
+  <!-- inner obstacles -->
+  <obstacle x1="120" y1="240" x2=" 130" y2="130" />
+  <obstacle x1="130" y1="100" x2=" 120" y2="0" />
+
+  <obstacle x1="60" y1="120" x2=" 90" y2="80" />
+  <obstacle x1="90" y1="80" x2=" 60" y2="10" />
+
+  <obstacle x1="130" y1="100" x2=" 240" y2="100" />
+  <obstacle x1="130" y1="130" x2=" 240" y2="130" />
+
+  <obstacle x1="60" y1="240" x2=" 60" y2="0" />
+  
+  <!-- border obstacles -->
+  <obstacle x1="0" y1="0" x2="240" y2="0" />
+  <obstacle x1="240" y1="0" x2="240" y2="240" />
+  <obstacle x1="240" y1="240" x2="0" y2="240" />
+  <obstacle x1="0" y1="240" x2="0" y2="0" />
+
+</scenario>

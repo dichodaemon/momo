@@ -66,7 +66,7 @@ class Track( object ):
   mean = property( get_mean, set_mean )
 
 def split_line( line ):
-  v = line.split()
+  v = line.split()[:5]
   return [
     int( float( v[0] ) ), float( v[1] ), int( float( v[2] ) ), 
     float( v[3] ), float( v[4] )
