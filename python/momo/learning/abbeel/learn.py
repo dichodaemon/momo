@@ -63,7 +63,7 @@ def compute_expectations( feature_module, convert, radius, states, frames, w, h 
   l = len( states )
   grid_path = [convert.from_world2( s ) for s in states]
   repr_path = [convert.to_world2( convert.from_world2( s ), np.linalg.norm( s[2:] ) ) for s in states[:h]]
-  mu_observed = momo.irl.features.feature_sum( 
+  mu_observed = momo.features.feature_sum( 
     feature_module, 
     repr_path[:h],
     frames[:h] 

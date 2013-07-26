@@ -1,7 +1,7 @@
 import numpy as np
 import time
 import momo
-from momo.irl.learning.max_ent.compute_cummulated import *
+from momo.learning.max_ent.compute_cummulated import *
 from math import *
 
 def learn( feature_module, convert, frame_data, ids, radius, h ):
@@ -45,7 +45,7 @@ def learn( feature_module, convert, frame_data, ids, radius, h ):
       for i in xrange( max( l - h, 1 ) ):
         momo.tick( "Compute Expectations" )
         expected, cummulated, costs =\
-          momo.irl.learning.max_ent.compute_expectations( 
+          momo.learning.max_ent.compute_expectations( 
             states[i:], frames[i:], w * 4, h,
             convert, compute_costs, planner, compute_features, accum
           )
@@ -60,7 +60,7 @@ def learn( feature_module, convert, frame_data, ids, radius, h ):
           continue
         gradient = observed / np.sum( observed[:4] ) - expected / np.sum( expected[:4] )
         error = np.linalg.norm( gradient )
-        #momo.plot.gradient_descent_step( cummulated, costs, grid_paths[o_id], error )
+        momo.plot.gradient_descent_step( cummulated, costs, grid_paths[o_id], error )
     gradient = sum_obs / np.sum( sum_obs[:4] ) - sum_exp / np.sum( sum_exp[:4] )
     error = np.linalg.norm( gradient )
     if error < min_e:

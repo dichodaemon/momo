@@ -17,7 +17,7 @@ def list_callback( option, opt_str, value, parser ):
   setattr( parser.values, option.dest, [int( v ) for v in value.split( "," )] )
 
 # Process command line
-parser = OptionParser( usage = "usage: %prog [options] dataset algorithm [params...]" )
+parser = OptionParser( usage = "usage: %prog [options] dataset features algorithm [params...]" )
 parser.add_option( 
   "--ids", help = "Trajectory ids to learn from", type = "string", 
   action = "callback", dest = "ids", callback = list_callback, default = []
@@ -34,8 +34,9 @@ if len( args ) < 2:
   exit( 1 )
 
 dataset        = args[0]
-algorithm_name = args[1]
-algorithm_args = args[2:]
+feature_name   = args[1]
+algorithm_name = args[2]
+algorithm_args = args[3:]
 
 delta = options.delta
 ids  = options.ids
@@ -45,16 +46,17 @@ start_path = "data/models/%s" % dataset
 if not os.path.exists( start_path ):
   os.makedirs( start_path )
 
-output_name  = "%s/%s" % ( start_path, algorithm_name )
+output_name  = "%s/%s-%s" % ( start_path, feature_name, algorithm_name )
 if len( algorithm_args ) > 0:
   output_name += "-%s" % "_".join( algorithm_args )
 output_name += ".txt"
 
 # Perform learning
 data      = momo.read_data( "data/filtered/%s.txt" % dataset )
-algorithm = momo.algorithms.__dict__[algorithm_name]
+features  = momo.features.__dict__[feature_name]
+algorithm = momo.learning.__dict__[algorithm_name]
 
-a = algorithm( *algorithm_args, data = data, ids = ids, delta = delta )
+a = momo.irl_assembler( features, algorithm, *algorithm_args, data = data, ids = ids, delta = delta )
 f = open( output_name, "w" )
 a.save( f )
 f.close()

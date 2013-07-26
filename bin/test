@@ -8,6 +8,8 @@ BASE_DIR = os.path.abspath( os.path.join( os.path.dirname( __file__ ), ".." ) )
 path     = os.path.abspath( os.path.join( BASE_DIR, "python" ) )
 sys.path.append( path )
 
+import warnings
+warnings.simplefilter( "error", "RuntimeWarning" )
 import time
 import pylab as pl
 import numpy as np
@@ -33,8 +35,14 @@ def plot_path( path, format ):
   )
 
 def obstruction( agent, other ):
-  a_v = agent[2:] / np.linalg.norm( agent[2:] )
-  o_v = other[2:] / np.linalg.norm( other[2:] )
+  try:
+    a_v = agent[2:] / np.linalg.norm( agent[2:] )
+  except TypeError:
+    a_v = agent[2:]
+  try:
+    o_v = other[2:] / np.linalg.norm( other[2:] )
+  except TypeError:
+    o_v = other[2:]
   angle = np.dot( a_v, o_v )
   if angle < 0:
     p_x = agent[:2] - other[:2]
@@ -121,13 +129,14 @@ parser.add_option(
 
 options, args = parser.parse_args()
 
-if len( args ) < 2:
+if len( args ) < 3:
   parser.error( "Incorrect number of arguments" )
   exit( 1 )
 
 dataset        = args[0]
-algorithm_name = args[1]
-algorithm_args = args[2:]
+feature_name   = args[1]
+algorithm_name = args[2]
+algorithm_args = args[3:]
 
 delta = options.delta
 ids  = options.ids
@@ -139,12 +148,12 @@ frame_skip = options.frame_skip
 # Prepare file paths
 start_path = "data/models/%s" % dataset 
 
-input_name = "%s/%s" % ( start_path, algorithm_name )
+input_name = "%s/%s-%s" % ( start_path, feature_name, algorithm_name )
 if len( algorithm_args ) > 0:
   input_name += "-%s" % "_".join( algorithm_args )
 input_name += ".txt"
 
-output_path = "experiments/%s/%s" % ( dataset, algorithm_name )
+output_path = "experiments/%s/%s-%s" % ( dataset, feature_name, algorithm_name )
 if len( algorithm_args ) > 0:
   output_path += "-%s" % "_".join( algorithm_args )
 
@@ -156,9 +165,8 @@ if not os.path.exists( output_path ):
 # Perform tests
 
 data      = momo.read_data( "data/filtered/%s.txt" % dataset )
-algorithm = momo.algorithms.__dict__[algorithm_name]
 
-algorithm = algorithm.load( open( input_name ) )
+algorithm = momo.irl_assembler.load( open( input_name ) )
 
 convert    = momo.convert( data, delta )
 frame_data = convert.preprocess_data( data )

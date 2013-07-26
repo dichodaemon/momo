@@ -18,7 +18,7 @@ def learn( feature_module, convert, frame_data, ids, radius, h ):
     l = len( frame_data[o_id]["states"] )
     for i in xrange( max( l - h, 1 ) ):
       observed, expected, cummulated, costs, grid_path =\
-        momo.irl.learning.max_ent.compute_expectations( 
+        momo.learning.max_ent.compute_expectations( 
           feature_module, convert, radius,
           frame_data[o_id]["states"][i:], frame_data[o_id]["frames"][i:],
           w, h

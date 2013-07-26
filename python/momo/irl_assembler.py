@@ -3,11 +3,10 @@ import numpy as np
 import cPickle
 from math import *
 
-class irl( object ):
+class irl_assembler( object ):
   def __init__( self, features, learning, radius, h, theta = None, data = None, ids = None, delta = 0.25 ):
-    self.features = momo.irl.features.__dict__[features]
+    self.features = features
     self.learning = learning
-    self.__learn = momo.irl.learning.__dict__[learning].learn
     self.radius = float( radius )
     self.h = int( h )
     self.theta  = theta
@@ -24,7 +23,7 @@ class irl( object ):
       l = len( frame_data.keys() ) / 2
       ids = range( l, l + 5 )
 
-    self.theta = self.__learn( 
+    self.theta = self.learning.learn( 
       self.features, self.__convert, frame_data, ids, 
       radius = self.radius, h = self.h
     )
@@ -47,11 +46,15 @@ class irl( object ):
     return result
 
   def save( self, stream ):
-    cPickle.dump( [self.learning, self.radius, self.h, self.theta], stream )
+    print "Saved", self.features.__name__, self.learning.__name__
+    cPickle.dump( [self.features.__name__, self.learning.__name__, self.radius, self.h, self.theta], stream )
 
   @staticmethod
   def load( stream ):
-    learning, radius, h, theta = cPickle.load( stream )
-    result = irl( learning, radius, h, theta )
+    features, learning, radius, h, theta = cPickle.load( stream )
+    print "Loaded", theta
+    features = momo.features.__dict__[features.split( "." )[-1]]
+    learning = momo.learning.__dict__[learning.split( "." )[-1]]
+    result = irl_assembler( features, learning, radius, h, theta )
     return result
 
