@@ -11,6 +11,7 @@ def compute_expectations(
   momo.tick( "Forward-backward" )
   forward, backward, costs = planner( states[0], states[-1], avg_velocity, frames[0], w )
   momo.tack( "Forward-backward" )
+
   momo.tick( "Compute features" )
   features = compute_features( avg_velocity, frames[0] )
   momo.tack( "Compute features" )

@@ -168,7 +168,7 @@ data      = momo.read_data( "data/filtered/%s.txt" % dataset )
 
 algorithm = momo.irl_assembler.load( open( input_name ) )
 
-convert    = momo.convert( data, delta )
+convert    = momo.convert( data, delta, 10 )
 frame_data = convert.preprocess_data( data )
 
 algorithm.convert = convert
@@ -197,7 +197,7 @@ for o_id in ids:
 
 
   # Compute planned feature_sum
-  planned = algorithm.plan( states[0], states[-1], velocity, frames )
+  planned = algorithm.plan( states[0], states[-1], velocity, frames, True )
   val = algorithm.feature_sum( planned, frames )
   mu_planned[o_id] = val / sum( val[:4] )
 

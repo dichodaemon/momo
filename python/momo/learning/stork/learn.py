@@ -58,10 +58,14 @@ def learn( feature_module, convert, frame_data, ids, radius, h ):
 
         if np.any( np.isnan( expected ) ):
           continue
-        gradient = observed / np.sum( observed[:4] ) - expected / np.sum( expected[:4] )
+        if np.sum( observed[:4] ) != 0 and np.sum( expected[:4] ) != 0:
+          gradient = observed / np.sum( observed[:4] ) - expected / np.sum( expected[:4] )
+        else:
+          gradient = observed * 0.
         error = np.linalg.norm( gradient )
-        momo.plot.gradient_descent_step( cummulated, costs, grid_paths[o_id], error )
-    gradient = sum_obs / np.sum( sum_obs[:4] ) - sum_exp / np.sum( sum_exp[:4] )
+        #momo.plot.gradient_descent_step( cummulated, costs, grid_paths[o_id], error )
+    if np.sum( sum_obs[:4] ) != 0 and np.sum( sum_exp[:4] ) != 0:
+      gradient = sum_obs / np.sum( sum_obs[:4] ) - sum_exp / np.sum( sum_exp[:4] )
     error = np.linalg.norm( gradient )
     if error < min_e:
       min_e = error
@@ -72,6 +76,8 @@ def learn( feature_module, convert, frame_data, ids, radius, h ):
     for i in xrange( feature_length ):
       w[i] *= exp( -gamma * decay ** times * gradient[i] )
       #w[i] *= exp( -gamma * gradient[i] )
+    w /= np.sum( w )
+    print "w", w
     momo.tack( "Step" )
     print "\n".join( momo.stats( "Step" ) )
 

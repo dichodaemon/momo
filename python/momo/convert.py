@@ -6,11 +6,11 @@ import random
 ANGLES     = [0, pi / 4, pi / 2, 3 * pi / 4, pi, -3 * pi / 4, -pi / 2, -pi / 4]
 
 class convert( object ):
-  def __init__( self, data, delta ):
-    self.x = min( data, key = lambda x: x[3] )[3] - delta / 2
-    self.y = min( data, key = lambda y: y[4] )[4] - delta / 2
-    self.width  = max( data, key = lambda x: x[3] )[3] - self.x + delta / 2
-    self.height = max( data, key = lambda y: y[4] )[4] - self.y + delta / 2
+  def __init__( self, data, delta, margin = 0 ):
+    self.x = min( data, key = lambda x: x[3] )[3] - ( margin + 0.5 ) * delta
+    self.y = min( data, key = lambda y: y[4] )[4] - ( margin + 0.5 ) * delta
+    self.width  = max( data, key = lambda x: x[3] )[3] - self.x + ( margin + 0.5 ) * delta
+    self.height = max( data, key = lambda y: y[4] )[4] - self.y + ( margin + 0.5 ) * delta
     self.delta = delta
     self.grid_width = int( ceil( self.width / self.delta ) )
     self.grid_height = int( ceil( self.height / self.delta ) )
@@ -50,8 +50,8 @@ class convert( object ):
 
   def to_world( self, v ):
     return np.array( [
-      self.x + self.delta * ( v[0] + 0.5 ), 
-      self.y + self.delta * ( v[1] + 0.5 ), 
+      self.x + self.delta * ( v[0] + 0.50001 ), 
+      self.y + self.delta * ( v[1] + 0.50001 ), 
       ANGLES[v[2]]
     ], dtype = np.float32 )
 

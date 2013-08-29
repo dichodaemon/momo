@@ -1,0 +1,66 @@
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sys
+import os
+
+BASE_DIR = os.path.abspath( os.path.join( os.path.dirname( __file__ ), ".." ) )
+path     = os.path.abspath( os.path.join( BASE_DIR, "python" ) )
+sys.path.append( path )
+
+import time
+import momo
+import momo.planning
+import numpy as np
+import matplotlib.pylab as pl
+import scipy.ndimage as ni
+from optparse import OptionParser
+
+
+def animate( convert, data ):
+  for f in data:
+    features = compute_features( 0.015, f )
+    momo.plot.plot_features( convert, f, features )
+
+def list_callback( option, opt_str, value, parser ):
+  setattr( parser.values, option.dest, [int( v ) for v in value.split( "," )] )
+
+# Process command line
+parser = OptionParser( usage = "usage: %prog [options] dataset oid features [params...]" )
+parser.add_option( 
+  "--delta", help = "Grid resolution", type = "float", 
+  dest = "delta", default = 0.25
+)
+
+options, args = parser.parse_args()
+
+if len( args ) < 3:
+  parser.error( "Incorrect number of arguments" )
+  exit( 1 )
+
+dataset        = args[0]
+oid            = int( args[1] )
+feature_name   = args[2]
+algorithm_args = args[3:]
+
+delta = options.delta
+
+# Perform learning
+data      = momo.read_data( "data/filtered/%s.txt" % dataset )
+features  = momo.features.__dict__[feature_name]
+
+convert  = momo.convert( data, delta )
+frame_data = convert.preprocess_data( data )
+compute_features = features.compute_features( convert, float( algorithm_args[0] ) )
+
+
+
+minx = min( data, key = lambda x: x[3] )[3]
+maxx = max( data, key = lambda x: x[3] )[3]
+miny = min( data, key = lambda y: y[4] )[4]
+maxy = max( data, key = lambda y: y[4] )[4]
+
+
+pl.figure( 1, figsize = ( 20, 10 ), dpi = 75 )
+pl.ion()
+animate( convert, frame_data[oid]["frames"] )

@@ -14,8 +14,10 @@ void computeFeature(
   for ( int i = 0; i < frameSize; i++ ) {
     float2 other = frame[i].lo;
     float2 diff  = position - other;
-    float dist   = length( diff );
-    if ( dist < radius ) {
+    /*float dist   = fabs( diff.y );*/
+    float dist = diff.x * diff.x + diff.y * diff.y;
+    /*float dist   = length( diff );*/
+    if ( dist < radius * radius ) {
       density += 1;
       avgVelocity += frame[i].hi;
     }

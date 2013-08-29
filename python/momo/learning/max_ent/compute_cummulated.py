@@ -41,7 +41,7 @@ class compute_cummulated( momo.opencl.Program ):
       cumm_buffer, feature_buffer
     )
 
-    cl.enqueue_copy( self.queue, w_features, feature_buffer )
     cl.enqueue_copy( self.queue, cummulated, cumm_buffer )
+    cl.enqueue_copy( self.queue, w_features, feature_buffer )
     return cummulated, w_features
 

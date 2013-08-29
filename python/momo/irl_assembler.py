@@ -35,8 +35,22 @@ class irl_assembler( object ):
 
   convert = property( None, set_convert )
 
-  def plan( self, start, goal, velocity, frames ):
-    return self.planner( start, goal, velocity, frames[0], self.theta )[0]
+  def plan( self, start, goal, velocity, frames, dynamic = False ):
+    if not dynamic:
+      return self.planner( start, goal, velocity, frames[0], self.theta )[0]
+    else:
+      result = []
+      count  = 0
+      p = self.planner( start, goal, velocity, frames[0], self.theta )[0]
+      while len( p ) > 0:
+        count += 1
+        result.append( p[0] )
+        if len( p ) == 2:
+          result.append( p[1] )
+          break
+        else:
+          p = self.planner( p[1], goal, velocity, frames[count], self.theta )[0]
+      return result
 
   def feature_sum( self, states, frames ):
     result = np.array( [0.] * self.features.FEATURE_LENGTH )
@@ -54,7 +68,10 @@ class irl_assembler( object ):
     features, learning, radius, h, theta = cPickle.load( stream )
     print "Loaded", theta
     features = momo.features.__dict__[features.split( "." )[-1]]
+    print "Features", features
     learning = momo.learning.__dict__[learning.split( "." )[-1]]
+    print "Learning", learning
     result = irl_assembler( features, learning, radius, h, theta )
+    print "Radius, h,", radius, h
     return result
 
