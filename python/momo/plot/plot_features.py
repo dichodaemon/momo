@@ -18,7 +18,7 @@ def plot_features( convert, frame, features ):
       pl.xlim( convert.x, convert.x2 )
       pl.ylim( convert.y, convert.y2 )
       pl.imshow( features[a_idx, :, :, f_idx], pl.cm.Greys, None, None, "none", vmin = 0, vmax = vmax, extent = ( convert.x, convert.x2, convert.y2, convert.y ) )
-      pl.plot( frame[:, 0], frame[:, 1], 'b.', markersize = 10 )
+      #pl.plot( frame[:, 0], frame[:, 1], 'b.', markersize = 10 )
 
 
   pl.subplots_adjust( left = 0.01, right = 0.99 )
