@@ -26,8 +26,8 @@ def compute_feature( reference, frame, radius = 3 ):
       l_v = np.linalg.norm( rel_v )
       l_x = np.linalg.norm( rel_x )
       a = np.dot( rel_v / l_v, rel_x / l_x )
-      avg_ang += a
-      avg_mag += l_v
+      sum_ang += a
+      sum_mag += l_v
 
   if density > 0:
     feature[dns_i + max_idx( density, DENSITIES )] = 1
@@ -36,7 +36,7 @@ def compute_feature( reference, frame, radius = 3 ):
     feature[spd_i + max_idx( speed, SPEEDS )] = 1
 
     angle = sum_ang / density
-    feature[dir_i + max_idx( cosine, ANGLES )] = 1
+    feature[dir_i + max_idx( angle, ANGLES )] = 1
     
   return feature
 

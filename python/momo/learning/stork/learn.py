@@ -82,6 +82,7 @@ def learn( feature_module, convert, frame_data, ids, radius, h ):
     print "\n".join( momo.stats( "Step" ) )
 
   print min_e
+  print "W", min_w
   return min_w
 
 
