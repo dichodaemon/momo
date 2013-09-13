@@ -12,30 +12,31 @@ def max_idx( value, reference ):
       
 
 def compute_feature( reference, frame, radius = 3 ):
-  density = 0
+  density = 0.0
   feature = np.array( [0.] * FEATURE_LENGTH, dtype = np.float32 )
-  avg_velocity = np.array( [0.] * 2, dtype = np.float32 )
+  sum_ang = 0.0
+  sum_mag = 0.0
 
   for i in xrange( len( frame ) ):
     dist  = momo.distance( frame[i][:2], reference[:2] )
     if dist < radius:
       density += 1
-      avg_velocity += frame[i][2:]
+      rel_v = frame[i][2:] - reference[2:]
+      rel_x = frame[i][:2] - reference[:2]
+      l_v = np.linalg.norm( rel_v )
+      l_x = np.linalg.norm( rel_x )
+      a = np.dot( rel_v / l_v, rel_x / l_x )
+      avg_ang += a
+      avg_mag += l_v
 
   if density > 0:
-    velocity = reference[2:]
-
-    avg_velocity /= density
-    avg_velocity  = velocity - avg_velocity
-
     feature[dns_i + max_idx( density, DENSITIES )] = 1
 
-    speed = np.linalg.norm( avg_velocity )
+    speed = sum_mag / density
     feature[spd_i + max_idx( speed, SPEEDS )] = 1
 
-    cosine = np.dot( avg_velocity / speed, velocity / np.linalg.norm( velocity ) )
+    angle = sum_ang / density
     feature[dir_i + max_idx( cosine, ANGLES )] = 1
-
     
   return feature
 

@@ -1,57 +1,53 @@
 #pragma OPENCL EXTENSION cl_khr_fp64: enable
 
+uint maxIdx( float value, __constant float * reference, uint length )
+{
+  uint result = 0;
+  for ( uint i = 0; i < length; ++i ) {
+    if ( value >= reference[i] ) {
+      result = i;
+    }
+  }
+  return result;
+}
+
 void computeFeature( 
-  float2 position, float2 velocity, float2 direction, float radius,
+  float2 position, float2 velocity, float radius,
   uint frameSize, __constant float4 * frame, 
   __constant float * densities, __constant float * speeds, __constant float * angles,
   float * feature 
 ) {
   int density = 0;
-  float2 avgVelocity = (float2)( 0.0, 0.0 );
+  float angSum = 0.0;
+  float magSum = 0.0;
 
-  for ( int i = 0; i < 9; i++ ) {
+  for ( int i = 0; i < 12; i++ ) {
     feature[i] = 0.;
   }
   for ( int i = 0; i < frameSize; i++ ) {
     float2 other = frame[i].lo;
-    float2 diff  = position - other;
-    float dist   = length( diff );
-    if ( dist < radius ) {
+    float2 xRel  = other - position;
+    float xLen   = length( xRel );
+    if ( xLen < radius ) {
       density += 1;
-      avgVelocity += frame[i].hi;
+      float2 vRel = frame[i].hi - velocity;
+      float vLen = length( vRel );
+      float a = dot( vRel / vLen, xLen / xLen );
+      angSum += a;
+      magSum += vLen;
     }
   }
 
 
+
   if ( density > 0 ) {
-    avgVelocity /= density;
-    avgVelocity = velocity - avgVelocity;
+    feature[maxIdx( density, densities, 3)] = 1;
 
-    int idx = 0;
-    for ( int i = 0; i < 3; ++i ) {
-      if ( density >= densities[i] ) {
-        idx = i;
-      }
-    }
-    feature[idx] = 1;
+    float speed = magSum / density;
+    feature[3 + maxIdx( speed, speeds, 3 )] = 1;
 
-    float speed = length( avgVelocity );
-    idx = 3;
-    for ( int i = 0; i < 3; ++i ) {
-      if ( speed >= speeds[i] ) {
-        idx = i + 3;
-      }
-    }
-    feature[idx] = 1;
-
-    float cosine = dot( normalize( avgVelocity ), direction );
-    idx = 6;
-    for ( int i = 0; i < 3; i++ ) {
-      if ( cosine >= angles[i] ) {
-        idx = i + 6;
-      }
-    }
-    feature[idx] = 1;
+    float cosine = angSum / density;
+    feature[6 + maxIdx( cosine, angles, 3 )] = 1;
   }
 }
 
@@ -72,7 +68,7 @@ __kernel void computeFeatures(
   float2 position = (float2)( column * delta, row * delta );
   float f[9];
   
-  computeFeature( position, velocity, dir, radius, frameSize, frame, densities, speeds, angles, f );
+  computeFeature( position, velocity, radius, frameSize, frame, densities, speeds, angles, f );
 
   int base =  direction * width * height * featureLength 
             + row * width * featureLength

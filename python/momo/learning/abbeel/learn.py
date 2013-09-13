@@ -34,23 +34,22 @@ def learn( feature_module, convert, frame_data, ids, radius, h ):
         sum_obs += observed
         sum_exp += expected
 
-        gradient = observed / np.sum( observed[:4] ) - expected / np.sum( expected[:4] )
-        error = np.linalg.norm( gradient )
-        momo.plot.gradient_descent_step( cummulated, costs, grid_path, error )
+        #gradient = observed / np.sum( observed[:4] ) - expected / np.sum( expected[:4] )
+        #error = np.linalg.norm( gradient )
+        #momo.plot.gradient_descent_step( cummulated, costs, grid_path, error )
 
-    gradient = sum_obs / np.sum( sum_obs[:4] ) - sum_exp / np.sum( sum_exp[:4] )
+    gradient = sum_obs / np.sum( sum_obs ) - sum_exp / np.sum( sum_exp )
     error = np.linalg.norm( gradient )
+    print "Observed %s, Expected %s" % ( sum_obs, sum_exp )
+    print "Gradient", gradient
     print times, error
 
-    all_exp.append( expected )
+    all_exp.append( sum_exp / np.sum( sum_exp ) )
     weights.append( w )
     counts.append( np.linalg.norm( sum_obs - sum_exp ) )
     w, x = optimize( times, all_exp, sum_obs )
     norm = np.linalg.norm( w )
-    diff = w - w / norm
     w = w / norm
-    if norm < 1E-4:
-      break
 
   w = weights[np.argmin( counts )]
   return w

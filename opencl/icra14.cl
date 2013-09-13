@@ -12,7 +12,7 @@ uint maxIdx( float value, __constant float * reference, uint length )
 }
 
 void computeFeature( 
-  float2 position, float2 velocity, float2 direction, float radius,
+  float2 position, float2 velocity, float radius,
   uint frameSize, __constant float4 * frame, 
   __constant float * densities, __constant float * speeds, __constant float * angles,
   float * feature 
@@ -69,7 +69,7 @@ __kernel void computeFeatures(
   float2 position = (float2)( column * delta, row * delta );
   float f[9];
   
-  computeFeature( position, velocity, dir, radius, frameSize, frame, densities, speeds, angles, f );
+  computeFeature( position, velocity, radius, frameSize, frame, densities, speeds, angles, f );
 
   int base =  direction * width * height * featureLength 
             + row * width * featureLength
