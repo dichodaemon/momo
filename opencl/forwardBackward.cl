@@ -40,7 +40,7 @@ __kernel void forwardPass(
       int priorIndex = dForward * width * height + r * width + c;
       fValue += fMask;
       // TODO: Check t_exp is necessary
-      fValue += f1[priorIndex] * exp( -costs[stateIndex] );
+      fValue += f1[priorIndex] * exp( -costs[stateIndex]);
     }
 
     // Backward
@@ -52,7 +52,7 @@ __kernel void forwardPass(
       int nextIndex = dForward * width * height + r * width + c;
       bValue += bMask;
       // TODO: Check t_exp is necessary
-      bValue += b1[nextIndex] * exp( -costs[nextIndex] );
+      bValue += b1[nextIndex] * exp( -costs[nextIndex]);
     }
   }
   f2[stateIndex] = fValue;

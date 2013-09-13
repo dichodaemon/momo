@@ -18,10 +18,10 @@ void computeFeature(
   float * feature 
 ) {
   int density = 0;
-  float angSum = 0.0;
-  float magSum = 0.0;
+  int binCount[3] = { 0, 0, 0 };
+  float binSum[3] = { 0.0, 0.0, 0.0 };
 
-  for ( int i = 0; i < 9; i++ ) {
+  for ( int i = 0; i < 13; i++ ) {
     feature[i] = 0.;
   }
   for ( int i = 0; i < frameSize; i++ ) {
@@ -33,22 +33,24 @@ void computeFeature(
       float2 vRel = frame[i].hi - velocity;
       float vLen = length( vRel );
       float a = dot( vRel / vLen, xLen / xLen );
-      angSum += a;
-      magSum += vLen;
+      uint i  = maxIdx( a, angles, 3 );
+      binCount[i] += 1;
+      binSum[i] += vLen;
     }
   }
 
 
-
   if ( density > 0 ) {
-    feature[maxIdx( density, densities, 3)] = 1;
+    feature[maxIdx( density * 1.0, densities, 3 )] = 1;
 
-    float speed = magSum / density;
-    feature[3 + maxIdx( speed, speeds, 3 )] = 1;
-
-    float cosine = angSum / density;
-    feature[6 + maxIdx( cosine, angles, 3 )] = 1;
+    for ( int angle = 0; angle < 3; ++angle ) {
+      if ( binCount[angle] >= 0 ) {
+        float l = binSum[angle] / binCount[angle];
+        feature[3 + angle * 3 + maxIdx( l, speeds, 3 )] = 1;
+      }
+    }
   }
+  feature[12] = 1;
 }
 
 __kernel void computeFeatures( 
@@ -66,7 +68,7 @@ __kernel void computeFeatures(
   float2 dir      = normalize( directions[direction] );
   float2 velocity = dir * speed; 
   float2 position = (float2)( column * delta, row * delta );
-  float f[9];
+  float f[13];
   
   computeFeature( position, velocity, radius, frameSize, frame, densities, speeds, angles, f );
 

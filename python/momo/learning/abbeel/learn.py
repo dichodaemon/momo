@@ -52,11 +52,12 @@ def learn( feature_module, convert, frame_data, ids, radius, h ):
     w = w / norm
 
   w = weights[np.argmin( counts )]
+  print w
   return w
 
 
 def compute_expectations( feature_module, convert, radius, states, frames, w, h ):
-  compute_costs = feature_module.compute_costs( convert, radius )
+  compute_costs = feature_module.compute_costs( convert )
   planner = momo.irl.planning.dijkstra( convert, compute_costs )
 
   l = len( states )
@@ -65,13 +66,17 @@ def compute_expectations( feature_module, convert, radius, states, frames, w, h 
   mu_observed = momo.features.feature_sum( 
     feature_module, 
     repr_path[:h],
-    frames[:h] 
+    frames[:h],
+    radius
   )
 
   velocities = [np.linalg.norm( v[2:] ) for v in states[:h]]
   avg_velocity = np.sum( velocities, 0 ) / len( velocities )
 
-  path, cummulated, costs  = planner( states[0], states[-1], avg_velocity, frames[0], w )
+  compute_features = feature_module.compute_features( convert, radius )
+  features = compute_features( avg_velocity, frames[0] )
+
+  path, cummulated, costs  = planner( states[0], states[-1], features, w, avg_velocity )
   mu_expected = np.sum( 
     [
       feature_module.compute_feature( 
@@ -81,7 +86,6 @@ def compute_expectations( feature_module, convert, radius, states, frames, w, h 
     ], 
     0 
   )
-
   return mu_observed, mu_expected, cummulated, costs, grid_path
 
 

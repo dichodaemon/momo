@@ -30,7 +30,7 @@ class irl_assembler( object ):
 
   def set_convert( self, convert ):
     self.__convert = convert
-    self.compute_costs = self.features.compute_costs( self.__convert, self.radius )
+    self.compute_costs = self.features.compute_costs( self.__convert )
     self.planner = momo.irl.planning.dijkstra( self.__convert, self.compute_costs )
 
   convert = property( None, set_convert )

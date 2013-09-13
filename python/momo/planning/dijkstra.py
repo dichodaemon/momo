@@ -65,6 +65,7 @@ class dijkstra( momo.opencl.Program ):
 
     cl.enqueue_copy( self.queue, floats, cummulated_buffer )
     cl.enqueue_copy( self.queue, ints, parent_buffer )
+
     return floats, ints
 
   def get_path( self, parents, start ):

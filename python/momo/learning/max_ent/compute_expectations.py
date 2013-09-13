@@ -7,15 +7,11 @@ def compute_expectations(
 ):
   velocities = [np.linalg.norm( v[2:] ) for v in states]
   avg_velocity = np.sum( velocities, 0 ) / len( velocities )
+  features = compute_features( avg_velocity, frames[0] )
 
   momo.tick( "Forward-backward" )
-  forward, backward, costs = planner( states[0], states[-1], avg_velocity, frames[0], w )
+  forward, backward, costs = planner( states[0], states[-1], features, w, avg_velocity )
   momo.tack( "Forward-backward" )
-
-  momo.tick( "Compute features" )
-  features = compute_features( avg_velocity, frames[0] )
-  momo.tack( "Compute features" )
-
 
   momo.tick( "Accum" )
   cummulated, w_features  = accum( 

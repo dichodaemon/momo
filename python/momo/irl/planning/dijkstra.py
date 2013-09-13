@@ -6,15 +6,15 @@ class dijkstra( object ):
     self.compute_costs = compute_costs
     self.planner = momo.planning.dijkstra()
 
-  def __call__( self, start, goal, velocity, frame, theta ):
+  def __call__( self, start, goal, features, theta, speed ):
     current = self.convert.from_world2( start )
     goal = self.convert.from_world2( goal )
 
-    costs = self.compute_costs( velocity, theta, frame )
+    costs = self.compute_costs( features, theta )
     cummulated, parents = self.planner( costs, goal )
     path = self.planner.get_path( parents, current )
 
     result = []
     for p in path:
-      result.append( self.convert.to_world2( p, velocity ) )
+      result.append( self.convert.to_world2( p, speed ) )
     return result, cummulated, costs

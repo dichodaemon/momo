@@ -21,7 +21,7 @@ void computeFeature(
   float angSum = 0.0;
   float magSum = 0.0;
 
-  for ( int i = 0; i < 9; i++ ) {
+  for ( int i = 0; i < 10; i++ ) {
     feature[i] = 0.;
   }
   for ( int i = 0; i < frameSize; i++ ) {
@@ -49,6 +49,7 @@ void computeFeature(
     float cosine = angSum / density;
     feature[6 + maxIdx( cosine, angles, 3 )] = 1;
   }
+  feature[9] = 1;
 }
 
 __kernel void computeFeatures( 
@@ -66,7 +67,7 @@ __kernel void computeFeatures(
   float2 dir      = normalize( directions[direction] );
   float2 velocity = dir * speed; 
   float2 position = (float2)( column * delta, row * delta );
-  float f[9];
+  float f[10];
   
   computeFeature( position, velocity, radius, frameSize, frame, densities, speeds, angles, f );
 

@@ -7,7 +7,7 @@ from math import *
 def learn( feature_module, convert, frame_data, ids, radius, h ):
   feature_length = feature_module.FEATURE_LENGTH
 
-  compute_costs = feature_module.compute_costs( convert, radius )
+  compute_costs = feature_module.compute_costs( convert )
   planner = momo.irl.planning.forward_backward( convert, compute_costs )
   compute_features = feature_module.compute_features( convert, radius )
   accum = compute_cummulated()
@@ -25,7 +25,7 @@ def learn( feature_module, convert, frame_data, ids, radius, h ):
   w  = ( np.ones( feature_length ) * 1.0 / feature_length ).astype( np.float64 )
 
   gamma = 0.5
-  decay = 0.98
+  decay = 0.99
   min_w = None
   min_e = 1E6
 
@@ -46,7 +46,7 @@ def learn( feature_module, convert, frame_data, ids, radius, h ):
         momo.tick( "Compute Expectations" )
         expected, cummulated, costs =\
           momo.learning.max_ent.compute_expectations( 
-            states[i:], frames[i:], w * 4, h,
+            states[i:], frames[i:], w, h,
             convert, compute_costs, planner, compute_features, accum
           )
         momo.tack( "Compute Expectations" )
@@ -58,18 +58,20 @@ def learn( feature_module, convert, frame_data, ids, radius, h ):
 
         if np.any( np.isnan( expected ) ):
           continue
-        if np.sum( observed[:4] ) != 0 and np.sum( expected[:4] ) != 0:
-          gradient = observed / np.sum( observed[:4] ) - expected / np.sum( expected[:4] )
+        if np.sum( observed ) != 0 and np.sum( expected ) != 0:
+          gradient = observed / np.sum( observed ) - expected / np.sum( expected )
         else:
           gradient = observed * 0.
         error = np.linalg.norm( gradient )
         #momo.plot.gradient_descent_step( cummulated, costs, grid_paths[o_id], error )
-    if np.sum( sum_obs[:4] ) != 0 and np.sum( sum_exp[:4] ) != 0:
-      gradient = sum_obs / np.sum( sum_obs[:4] ) - sum_exp / np.sum( sum_exp[:4] )
+    if np.sum( sum_obs ) != 0 and np.sum( sum_exp ) != 0:
+      gradient = sum_obs / np.sum( sum_obs ) - sum_exp / np.sum( sum_exp )
     error = np.linalg.norm( gradient )
     if error < min_e:
       min_e = error
       min_w = w
+    print sum_obs, sum_exp
+    print sum_obs / np.sum( sum_obs ), sum_exp / np.sum( sum_exp )
     print times, error
     if error < 0.05:
       break

@@ -67,7 +67,7 @@ __kernel void computeFeatures(
   float2 dir      = normalize( directions[direction] );
   float2 velocity = dir * speed; 
   float2 position = (float2)( column * delta, row * delta );
-  float f[9];
+  float f[12];
   
   computeFeature( position, velocity, radius, frameSize, frame, densities, speeds, angles, f );
 
