@@ -3,6 +3,7 @@ import numpy as np
 from math import *
 from __common__ import *
 import momo
+from momo.features import *
 
 class compute_features( momo.opencl.Program ):
   def __init__( self, convert, radius ):

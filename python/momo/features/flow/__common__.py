@@ -3,17 +3,6 @@ from math import *
 
 FEATURE_LENGTH = 18
 
-DIRECTIONS = np.array( [
-  [ 1.,  0.],
-  [ 1.,  1.],
-  [ 0.,  1.],
-  [-1.,  1.],
-  [-1.,  0.],
-  [-1., -1.],
-  [ 0., -1.],
-  [ 1., -1.]
-], dtype = np.float32 )
-
 ANGLES = np.array( [
   [cos( pi / 8 ), sin( pi / 8 )],
   [cos( 3 * pi / 8 ), sin( 3 * pi / 8 )],
