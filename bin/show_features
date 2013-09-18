@@ -19,7 +19,9 @@ from optparse import OptionParser
 
 def animate( convert, data ):
   for f in data:
-    features = compute_features( 0.015, f )
+    speed = sum( [np.linalg.norm( f[i][2:] ) for i in xrange( f.shape[0] )] ) / f.shape[0]
+    print "Speed", speed
+    features = compute_features( speed, f )
     momo.plot.plot_features( convert, f, features )
 
 def list_callback( option, opt_str, value, parser ):

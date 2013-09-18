@@ -9,7 +9,7 @@ def split_line( line ):
   v = line.split()
   return [
     int( v[0] ), float( v[1] ), int( v[2] ), 
-    float( v[4] ), float( v[3] ), float( v[6] ), float( v[5] )
+    float( v[3] ), float( v[4] ), float( v[5] ), float( v[6] )
   ]
 
 def read_data( filename ):
