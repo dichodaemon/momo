@@ -25,13 +25,14 @@ parser.add_option(
 
 options, args = parser.parse_args()
 
-if len( args ) < 2:
+if len( args ) < 3:
   parser.error( "Incorrect number of arguments" )
   exit( 1 )
 
 dataset        = args[0]
 feature_name   = args[1]
-algorithm_args = args[2:]
+agent_id       = int( args[2] )
+algorithm_args = args[3:]
 
 
 delta = options.delta
@@ -50,11 +51,12 @@ for frame in momo.frames( data ):
     tmp.append( agent )
   for i in xrange( len( tmp ) ):
      o_frame, o_time, o_id, o_x, o_y, o_dx, o_dy = tmp[i]
-     others = [np.array( v[3:] ) for v in tmp]
-     del others[i]
+     if o_id == agent_id:
+       others = [np.array( v[3:] ) for v in tmp]
+       del others[i]
 
-     reference = np.array( [o_x, o_y, o_dx, o_dy] )
-     feature = features.compute_feature( reference, others, radius )
-     print o_frame, o_id, np.dot( weights, feature ), " ".join( [str( v ) for v in feature] )
+       reference = np.array( [o_x, o_y, o_dx, o_dy] )
+       feature = features.compute_feature( reference, others, radius )
+       print o_frame, o_id, np.dot( weights, feature ), " ".join( [str( v ) for v in feature] )
 
 
