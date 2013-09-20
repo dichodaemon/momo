@@ -76,10 +76,10 @@ class convert( object ):
     for frame in momo.frames( data ):
       tmp = []
       for o_frame, o_time, o_id, o_x, o_y, o_dx, o_dy in frame:
-        tmp.append( [o_id, np.array( [o_x, o_y, o_dx, o_dy] )])
+        tmp.append( [o_id, o_time, o_frame, np.array( [o_x, o_y, o_dx, o_dy] )])
 
       for i in xrange( len( tmp ) ):
-        o_id, o = tmp.pop( 0 )
+        o_id, o_time, o_frame, o = tmp.pop( 0 )
         if not o_id in frame_data:
           frame_data[o_id] = {
             "times": [],
@@ -88,10 +88,10 @@ class convert( object ):
             "frames": []
           }
         frame_data[o_id]["states"].append( o )
-        frame_data[o_id]["frames"].append( [f[1] for f in tmp] )
-        frame_data[o_id]["times"].append( tmp[0][1][1] )
-        frame_data[o_id]["frame_nums"].append( tmp[0][1][0] )
-        tmp.append( [o_id, o] )
+        frame_data[o_id]["frames"].append( [f[3] for f in tmp] )
+        frame_data[o_id]["times"].append( o_time )
+        frame_data[o_id]["frame_nums"].append( o_frame )
+        tmp.append( [o_id, o_time, o_frame, o] )
 
     # Rasterize to grid
     for o_id, frame in frame_data.items():

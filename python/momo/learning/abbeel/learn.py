@@ -76,6 +76,9 @@ def compute_expectations( feature_module, convert, radius, states, frames, w, h 
   compute_features = feature_module.compute_features( convert, radius )
   features = compute_features( avg_velocity, frames[0] )
 
+  
+  w = sum( w ) - w
+
   path, cummulated, costs  = planner( states[0], states[-1], features, w, avg_velocity )
   mu_expected = np.sum( 
     [
