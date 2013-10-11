@@ -86,7 +86,6 @@ def filter_data( data ):
   tmp = {}
   for o in data:
     frame, timestamp, o_id, x, y  = o
-    timestamp = frame * 1.0 / 200
     if timestamp != old_timestamp:
       if old_timestamp != None:
         delta = timestamp - old_timestamp

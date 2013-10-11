@@ -98,6 +98,7 @@ class convert( object ):
       old_grid_s = None
       states = []
       frames = []
+      frame_nums = []
       for index in xrange( len( frame["states"] ) ):
         state = frame["states"][index]
         angle = momo.angle.as_angle( np.array( state[2:] ) )
@@ -106,6 +107,8 @@ class convert( object ):
           old_grid_s = grid_s
           states.append( frame["states"][index] )
           frames.append( np.array( frame["frames"][index], dtype = np.float32 ) )
+          frame_nums.append(  frame["frame_nums"][index] )
       frame["states"] = states
       frame["frames"] = frames
+      frame["frame_nums"] = frame_nums
     return frame_data

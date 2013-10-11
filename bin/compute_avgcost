@@ -41,22 +41,29 @@ radius = float( algorithm_args[0] )
 data      = momo.read_data( "data/filtered/%s.txt" % dataset )
 features  = momo.features.__dict__[feature_name]
 
+convert = momo.convert( data, delta )
+frame_data = convert.preprocess_data( data )
+compute_features = features.compute_features( convert, radius )
+compute_costs = momo.features.compute_costs( convert )
+
+
 weights = np.ones( features.FEATURE_LENGTH, dtype = np.float32 )
 for i in xrange( features.FEATURE_LENGTH ):
   weights[i] /= features.FEATURE_LENGTH - i
 
-for frame in momo.frames( data ):
-  tmp = []
-  for agent in frame:
-    tmp.append( agent )
-  for i in xrange( len( tmp ) ):
-     o_frame, o_time, o_id, o_x, o_y, o_dx, o_dy = tmp[i]
-     if o_id == agent_id:
-       others = [np.array( v[3:] ) for v in tmp]
-       del others[i]
+nums   = frame_data[agent_id]["frame_nums"]
+states = frame_data[agent_id]["states"]
+frames = frame_data[agent_id]["frames"]
 
-       reference = np.array( [o_x, o_y, o_dx, o_dy] )
-       feature = features.compute_feature( reference, others, radius )
-       print o_frame, o_id, np.dot( weights, feature ), " ".join( [str( v ) for v in feature] )
 
+for i in xrange( len( states ) ):
+  s = states[i]
+  vel = np.linalg.norm( s[2:] )
+  feat = compute_features( vel, frames[i] )
+  costs = compute_costs( feat, weights )
+  if i == 0:
+    print weights, costs.shape
+  s = np.sum( costs )
+  c = costs.shape[0] * costs.shape[1] * costs.shape[2]
+  print nums[i], s, s / c
 
